@@ -2,30 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Macro Tracker</title>
-    
-    <!-- 
-    ==========================================
-    ✅ CLOUDFLARE WORKER CONFIGURED
-    ==========================================
-    Your Cloudflare Worker URL is already set:
-    https://wild-cherry-e530.sonali-mquantius.workers.dev
-    
-    No configuration needed - just upload and use!
-    ==========================================
-    -->
-    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             background: #f0f2f5;
             padding: 16px;
             padding-bottom: 80px;
@@ -65,7 +52,7 @@
         }
         
         input[type="text"],
-        input[type="password"],
+        input[type="number"],
         input[type="date"],
         textarea {
             width: 100%;
@@ -75,7 +62,6 @@
             font-size: 16px;
             margin-bottom: 12px;
             font-family: inherit;
-            transition: border-color 0.2s;
         }
         
         input:focus,
@@ -85,7 +71,7 @@
         }
         
         textarea {
-            min-height: 120px;
+            min-height: 100px;
             resize: vertical;
         }
         
@@ -122,40 +108,15 @@
             transform: scale(0.98);
         }
         
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .btn-danger:active {
-            background: #dc2626;
-        }
-        
         .btn-secondary {
             background: #6b7280;
             color: white;
+            font-size: 14px;
+            padding: 12px;
         }
         
-        .btn-listening {
-            background: #ef4444;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { 
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% { 
-                transform: scale(1.02);
-                opacity: 0.8;
-            }
-        }
-        
-        button:disabled {
-            background: #d1d5db;
-            cursor: not-allowed;
-            transform: none;
+        .btn-secondary:active {
+            background: #4b5563;
         }
         
         .stats-grid {
@@ -243,7 +204,6 @@
             border-radius: 12px;
             margin-bottom: 16px;
             font-size: 14px;
-            line-height: 1.5;
         }
         
         .alert-success {
@@ -252,22 +212,10 @@
             border-left: 4px solid #10b981;
         }
         
-        .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border-left: 4px solid #ef4444;
-        }
-        
         .alert-info {
             background: #dbeafe;
             color: #1e40af;
             border-left: 4px solid #3b82f6;
-        }
-        
-        .alert-warning {
-            background: #fef3c7;
-            color: #92400e;
-            border-left: 4px solid #f59e0b;
         }
         
         .nav-tabs {
@@ -289,7 +237,6 @@
             font-size: 14px;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s;
             margin: 0;
             box-shadow: none;
         }
@@ -307,123 +254,56 @@
             display: block;
         }
         
-        .example-list {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 12px;
-            margin-top: 12px;
-        }
-        
-        .example-list ul {
-            margin-left: 20px;
-            margin-top: 8px;
-        }
-        
-        .example-list li {
-            margin-bottom: 6px;
-            color: #4b5563;
-            font-size: 14px;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
-            font-weight: 600;
-        }
-        
-        .loading.show {
-            display: block;
-        }
-        
         .empty-state {
             text-align: center;
             padding: 40px 20px;
             color: #9ca3af;
         }
         
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
-        }
-        
-        .btn-listening {
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
+        .grid-3 label {
+            font-size: 12px;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🥗 Macro Tracker</h1>
-        <p>AI-powered nutrition tracking</p>
+        <p>Simple nutrition tracking for marathon training</p>
     </div>
 
     <div id="alertContainer"></div>
-
-    <!-- API Key Setup -->
-    <div id="apiKeyCard" class="card" style="display: none;">
-        <h2>🔑 OpenAI API Key Required</h2>
-        <p style="margin-bottom: 16px; color: #6b7280; font-size: 14px;">
-            Get your free API key from <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #667eea;">platform.openai.com/api-keys</a>
-        </p>
-        <input type="password" id="apiKeyInput" placeholder="sk-...">
-        <button class="btn-primary" onclick="saveApiKey()">Save API Key</button>
-    </div>
 
     <!-- Navigation -->
     <div class="nav-tabs">
         <button class="nav-tab active" onclick="switchTab('logger')">📝 Log</button>
         <button class="nav-tab" onclick="switchTab('stats')">📊 Stats</button>
-        <button class="nav-tab" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
 
     <!-- Logger Tab -->
     <div id="loggerTab" class="tab-content active">
-        <div class="card">
-            <h2>Add Food</h2>
-            <input type="date" id="logDate">
-            <textarea id="foodInput" placeholder="Type what you ate...
-
-Examples:
-• 2 scrambled eggs with cheese
-• Grilled chicken breast 6oz
-• Half an avocado"></textarea>
-            <button class="btn-primary" onclick="startVoiceInput()" id="voiceBtn">
-                🎤 Voice Input
-            </button>
-            <button class="btn-success" onclick="parseAndLog()" id="parseBtn">
-                🤖 Parse & Log
-            </button>
-        </div>
-
         <div class="card">
             <h2>Quick Add</h2>
             <button class="btn-secondary" onclick="quickAdd('2 eggs', 12, 1, 10)">🥚 2 Eggs</button>
             <button class="btn-secondary" onclick="quickAdd('Avocado (half)', 1.5, 6, 11)">🥑 Half Avocado</button>
             <button class="btn-secondary" onclick="quickAdd('Chicken breast 4oz', 35, 0, 4)">🍗 Chicken 4oz</button>
             <button class="btn-secondary" onclick="quickAdd('Bacon (3 strips)', 9, 0, 12)">🥓 Bacon x3</button>
-            <button class="btn-secondary" onclick="quickAdd('Butter (1 tbsp)', 0, 0, 12)">🧈 Butter 1tbsp</button>
+            <button class="btn-secondary" onclick="quickAdd('Butter (1 tbsp)', 0, 0, 12)">🧈 Butter</button>
             <button class="btn-secondary" onclick="quickAdd('Cheddar cheese (1oz)', 7, 0.4, 9)">🧀 Cheese 1oz</button>
+            <button class="btn-secondary" onclick="quickAdd('Salmon 6oz', 40, 0, 18)">🐟 Salmon 6oz</button>
+            <button class="btn-secondary" onclick="quickAdd('Ground beef 4oz', 28, 0, 20)">🍖 Ground Beef</button>
+            <button class="btn-secondary" onclick="quickAdd('Almonds 1oz', 6, 6, 14)">🥜 Almonds</button>
+            <button class="btn-secondary" onclick="quickAdd('Olive oil 1tbsp', 0, 0, 14)">🫒 Olive Oil</button>
+            <button class="btn-secondary" onclick="quickAdd('Broccoli 1 cup', 3, 6, 0)">🥦 Broccoli</button>
+            <button class="btn-secondary" onclick="quickAdd('Spinach 2 cups', 2, 2, 0)">🥬 Spinach</button>
         </div>
 
         <div class="card">
@@ -431,22 +311,34 @@ Examples:
             <p style="font-size: 14px; color: #666; margin-bottom: 12px;">
                 Add any food with custom macros
             </p>
-            <input type="text" id="manualFoodName" placeholder="Food name (e.g., Salmon fillet)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <input type="date" id="logDate">
+            <input type="text" id="manualFoodName" placeholder="Food name (e.g., Greek yogurt 1 cup)">
+            <div class="grid-3">
                 <div>
-                    <label style="font-size: 12px; color: #666;">Protein (g)</label>
+                    <label>Protein (g)</label>
                     <input type="number" id="manualProtein" placeholder="0" step="0.1" min="0">
                 </div>
                 <div>
-                    <label style="font-size: 12px; color: #666;">Carbs (g)</label>
+                    <label>Carbs (g)</label>
                     <input type="number" id="manualCarbs" placeholder="0" step="0.1" min="0">
                 </div>
                 <div>
-                    <label style="font-size: 12px; color: #666;">Fat (g)</label>
+                    <label>Fat (g)</label>
                     <input type="number" id="manualFat" placeholder="0" step="0.1" min="0">
                 </div>
             </div>
-            <button class="btn-success" onclick="addManualEntry()">➕ Add Manual Entry</button>
+            <button class="btn-success" onclick="addManualEntry()">➕ Add to Log</button>
+        </div>
+        
+        <div class="card" style="background: #f0f9ff; border: 2px solid #3b82f6;">
+            <h2 style="color: #1e40af;">💡 Quick Tips</h2>
+            <p style="font-size: 14px; color: #1e40af; line-height: 1.6;">
+                <strong>Look up macros:</strong><br>
+                • USDA Database: <a href="https://fdc.nal.usda.gov/" target="_blank" style="color: #2563eb;">fdc.nal.usda.gov</a><br>
+                • Google: "chicken breast 6oz macros"<br>
+                • Nutrition labels on packages<br><br>
+                <strong>Takes 10 seconds!</strong> More accurate than AI parsing.
+            </p>
         </div>
     </div>
 
@@ -460,48 +352,16 @@ Examples:
         </div>
     </div>
 
-    <!-- Settings Tab -->
-    <div id="settingsTab" class="tab-content">
-        <div class="card">
-            <h2>⚙️ Settings</h2>
-            
-            <h3 style="margin-bottom: 12px; font-size: 16px;">OpenAI API Key</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 8px;">
-                Get your key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #667eea;">platform.openai.com/api-keys</a>
-            </p>
-            <input type="password" id="settingsApiKey" placeholder="sk-...">
-            <button class="btn-primary" onclick="updateApiKey()">Update API Key</button>
-            
-            <h3 style="margin: 24px 0 12px 0; font-size: 16px;">Data Management</h3>
-            <button class="btn-secondary" onclick="exportData()">📥 Export Data</button>
-            <button class="btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
-        </div>
-    </div>
-
-    <div id="loadingIndicator" class="loading">
-        <div class="spinner"></div>
-        <div style="margin-top: 12px;">Processing...</div>
-    </div>
-
     <script>
         // Global state
-        let apiKey = localStorage.getItem('macro_api_key') || '';
         let entries = JSON.parse(localStorage.getItem('macro_entries') || '[]');
         let currentTab = 'logger';
-        let recognition = null;
-        let isListening = false;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('logDate').value = today;
             document.getElementById('statsDate').value = today;
-            document.getElementById('settingsApiKey').value = apiKey;
-            
-            if (!apiKey) {
-                document.getElementById('apiKeyCard').style.display = 'block';
-            }
-            
             loadStats();
         });
 
@@ -514,175 +374,17 @@ Examples:
             
             setTimeout(() => {
                 alert.remove();
-            }, 5000);
-        }
-
-        function showLoading(show) {
-            document.getElementById('loadingIndicator').classList.toggle('show', show);
-        }
-
-        function saveApiKey() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if (!key) {
-                showAlert('Please enter an API key', 'error');
-                return;
-            }
-            if (!key.startsWith('sk-')) {
-                showAlert('OpenAI API key should start with sk-', 'warning');
-            }
-            apiKey = key;
-            localStorage.setItem('macro_api_key', key);
-            document.getElementById('apiKeyCard').style.display = 'none';
-            document.getElementById('settingsApiKey').value = key;
-            showAlert('API key saved successfully!', 'success');
-        }
-
-        function updateApiKey() {
-            const key = document.getElementById('settingsApiKey').value.trim();
-            if (!key) {
-                showAlert('Please enter an API key', 'error');
-                return;
-            }
-            apiKey = key;
-            localStorage.setItem('macro_api_key', key);
-            showAlert('API key updated successfully!', 'success');
-        }
-
-        function startVoiceInput() {
-            if (!('webkitSpeechRecognition' in window)) {
-                showAlert('❌ Voice recognition not supported. Try Chrome browser.', 'error');
-                return;
-            }
-
-            const voiceBtn = document.getElementById('voiceBtn');
-
-            // If already listening, stop
-            if (isListening && recognition) {
-                recognition.stop();
-                return;
-            }
-
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                isListening = true;
-                voiceBtn.textContent = '🔴 Listening...';
-                voiceBtn.classList.remove('btn-primary');
-                voiceBtn.classList.add('btn-danger', 'btn-listening');
-                showAlert('🎤 Listening... Speak now!', 'info');
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('foodInput').value = transcript;
-                showAlert('✅ Got it: "' + transcript + '"', 'success');
-            };
-
-            recognition.onend = () => {
-                isListening = false;
-                voiceBtn.textContent = '🎤 Voice Input';
-                voiceBtn.classList.remove('btn-danger', 'btn-listening');
-                voiceBtn.classList.add('btn-primary');
-            };
-
-            recognition.onerror = (event) => {
-                isListening = false;
-                voiceBtn.textContent = '🎤 Voice Input';
-                voiceBtn.classList.remove('btn-danger', 'btn-listening');
-                voiceBtn.classList.add('btn-primary');
-                
-                let errorMsg = 'Voice input error';
-                if (event.error === 'no-speech') {
-                    errorMsg = 'No speech detected. Try again.';
-                } else if (event.error === 'network') {
-                    errorMsg = 'Network error. Check your connection.';
-                } else if (event.error === 'not-allowed') {
-                    errorMsg = 'Microphone permission denied. Enable it in browser settings.';
-                }
-                showAlert('❌ ' + errorMsg, 'error');
-            };
-
-            try {
-                recognition.start();
-            } catch (error) {
-                showAlert('❌ Error starting voice input: ' + error.message, 'error');
-            }
-        }
-
-        function startVoiceInput() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                showAlert('Voice recognition not supported on this browser. Try Chrome.', 'error');
-                return;
-            }
-
-            const voiceBtn = document.getElementById('voiceBtn');
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                voiceBtn.textContent = '🔴 Listening...';
-                voiceBtn.classList.remove('btn-primary');
-                voiceBtn.classList.add('btn-listening');
-                voiceBtn.disabled = true;
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('foodInput').value = transcript;
-                showAlert('✅ Got it: ' + transcript, 'success');
-            };
-
-            recognition.onend = () => {
-                voiceBtn.textContent = '🎤 Voice Input';
-                voiceBtn.classList.remove('btn-listening');
-                voiceBtn.classList.add('btn-primary');
-                voiceBtn.disabled = false;
-            };
-
-            recognition.onerror = (event) => {
-                voiceBtn.textContent = '🎤 Voice Input';
-                voiceBtn.classList.remove('btn-listening');
-                voiceBtn.classList.add('btn-primary');
-                voiceBtn.disabled = false;
-                
-                if (event.error === 'no-speech') {
-                    showAlert('No speech detected. Try again.', 'warning');
-                } else if (event.error === 'not-allowed') {
-                    showAlert('Microphone access denied. Please allow microphone access in browser settings.', 'error');
-                } else {
-                    showAlert('Voice error: ' + event.error, 'error');
-                }
-            };
-
-            try {
-                recognition.start();
-                showAlert('🎤 Speak now...', 'info');
-            } catch (error) {
-                showAlert('Error starting voice: ' + error.message, 'error');
-                voiceBtn.textContent = '🎤 Voice Input';
-                voiceBtn.classList.remove('btn-listening');
-                voiceBtn.classList.add('btn-primary');
-                voiceBtn.disabled = false;
-            }
+            }, 3000);
         }
 
         function switchTab(tab) {
             currentTab = tab;
             
-            // Update tab buttons
             document.querySelectorAll('.nav-tab').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
             
-            // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -690,128 +392,6 @@ Examples:
             
             if (tab === 'stats') {
                 loadStats();
-            }
-        }
-
-        async function parseAndLog() {
-            const text = document.getElementById('foodInput').value.trim();
-            
-            if (!text) {
-                showAlert('Please describe what you ate', 'warning');
-                return;
-            }
-            
-            if (!apiKey) {
-                showAlert('Please set your OpenAI API key first', 'error');
-                document.getElementById('apiKeyCard').style.display = 'block';
-                return;
-            }
-
-            showLoading(true);
-            document.getElementById('parseBtn').disabled = true;
-
-            try {
-                console.log('Sending request via Cloudflare Worker...');
-                
-                // Cloudflare Worker URL - configured for your deployment
-                const workerUrl = 'https://wild-cherry-e530.sonali-mquantius.workers.dev';
-                
-                const response = await fetch(workerUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'gpt-4o-mini',
-                        messages: [{
-                            role: 'user',
-                            content: `Parse this food description into a JSON array with macronutrients. Each item needs: food (string), protein (number in grams), carbs (number in grams), fat (number in grams).
-
-Food description: "${text}"
-
-Return ONLY a valid JSON array, no explanation or markdown. Example format:
-[{"food":"eggs (2)","protein":12,"carbs":1,"fat":10}]`
-                        }],
-                        temperature: 0.3,
-                        max_tokens: 500
-                    })
-                });
-
-                console.log('Response status:', response.status);
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('API error:', errorData);
-                    throw new Error(`API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
-                }
-
-                const data = await response.json();
-                console.log('API response:', data);
-                
-                let content = data.choices[0].message.content.trim();
-                console.log('Raw content:', content);
-                
-                // Clean up response - remove markdown, extra text
-                content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-                
-                // Try to find JSON in the response
-                const jsonMatch = content.match(/\[[\s\S]*\]/);
-                if (jsonMatch) {
-                    content = jsonMatch[0];
-                }
-                
-                console.log('Cleaned content:', content);
-                
-                const foods = JSON.parse(content);
-                console.log('Parsed foods:', foods);
-                
-                if (!Array.isArray(foods) || foods.length === 0) {
-                    throw new Error('No foods found in response');
-                }
-
-                const logDate = document.getElementById('logDate').value;
-                
-                let addedCount = 0;
-                foods.forEach(food => {
-                    if (food.food && typeof food.protein === 'number' && typeof food.carbs === 'number' && typeof food.fat === 'number') {
-                        addEntry(food.food, food.protein, food.carbs, food.fat, logDate);
-                        addedCount++;
-                    }
-                });
-
-                if (addedCount === 0) {
-                    throw new Error('No valid food items in response');
-                }
-
-                document.getElementById('foodInput').value = '';
-                showAlert(`✅ Added ${addedCount} item(s)!`, 'success');
-                
-                if (currentTab === 'stats') {
-                    loadStats();
-                }
-
-            } catch (error) {
-                console.error('Full error:', error);
-                
-                let errorMsg = 'Error parsing food: ' + error.message;
-                
-                if (error.message.includes('wild-cherry-e530')) {
-                    errorMsg = '⚠️ Cannot reach Cloudflare Worker!\n\nMake sure the worker is deployed and running at:\nhttps://wild-cherry-e530.sonali-mquantius.workers.dev';
-                } else if (error.message.includes('JSON')) {
-                    errorMsg += '\n\nTry simpler input like: "2 eggs and bacon"';
-                } else if (error.message.includes('401') || error.message.includes('authentication') || error.message.includes('Incorrect API key')) {
-                    errorMsg += '\n\nYour OpenAI API key may be invalid. Check Settings tab.';
-                } else if (error.message.includes('429')) {
-                    errorMsg += '\n\nRate limit exceeded. Wait a moment and try again.';
-                } else if (error.message.includes('insufficient_quota')) {
-                    errorMsg += '\n\nNo credits remaining. Add credits at platform.openai.com/account/billing';
-                }
-                
-                showAlert(errorMsg, 'error');
-            } finally {
-                showLoading(false);
-                document.getElementById('parseBtn').disabled = false;
             }
         }
 
@@ -830,16 +410,16 @@ Return ONLY a valid JSON array, no explanation or markdown. Example format:
             const protein = parseFloat(document.getElementById('manualProtein').value) || 0;
             const carbs = parseFloat(document.getElementById('manualCarbs').value) || 0;
             const fat = parseFloat(document.getElementById('manualFat').value) || 0;
+            const logDate = document.getElementById('logDate').value;
 
             if (!name) {
-                showAlert('Please enter a food name', 'warning');
+                showAlert('Please enter a food name', 'info');
                 return;
             }
 
-            const logDate = document.getElementById('logDate').value;
             addEntry(name, protein, carbs, fat, logDate);
             
-            // Clear the form
+            // Clear form
             document.getElementById('manualFoodName').value = '';
             document.getElementById('manualProtein').value = '';
             document.getElementById('manualCarbs').value = '';
@@ -885,8 +465,9 @@ Return ONLY a valid JSON array, no explanation or markdown. Example format:
             if (dayEntries.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">🍽️</div>
+                        <div style="font-size: 48px; margin-bottom: 12px;">🍽️</div>
                         <div>No food logged for this day</div>
+                        <div style="font-size: 12px; margin-top: 8px;">Use Quick Add or Manual Entry to start tracking</div>
                     </div>
                 `;
                 return;
@@ -899,6 +480,16 @@ Return ONLY a valid JSON array, no explanation or markdown. Example format:
                 fat: dayEntries.reduce((sum, e) => sum + e.fat, 0)
             };
 
+            // Calculate percentages
+            const proteinCals = stats.protein * 4;
+            const carbsCals = stats.carbs * 4;
+            const fatCals = stats.fat * 9;
+            const totalCals = proteinCals + carbsCals + fatCals;
+            
+            const proteinPct = totalCals > 0 ? (proteinCals / totalCals * 100).toFixed(1) : 0;
+            const carbsPct = totalCals > 0 ? (carbsCals / totalCals * 100).toFixed(1) : 0;
+            const fatPct = totalCals > 0 ? (fatCals / totalCals * 100).toFixed(1) : 0;
+
             let html = `
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -907,20 +498,27 @@ Return ONLY a valid JSON array, no explanation or markdown. Example format:
                     </div>
                     <div class="stat-card protein">
                         <div class="stat-value">${stats.protein.toFixed(1)}g</div>
-                        <div class="stat-label">Protein</div>
+                        <div class="stat-label">Protein (${proteinPct}%)</div>
                     </div>
                     <div class="stat-card carbs">
                         <div class="stat-value">${stats.carbs.toFixed(1)}g</div>
-                        <div class="stat-label">Carbs</div>
+                        <div class="stat-label">Carbs (${carbsPct}%)</div>
                     </div>
                     <div class="stat-card fat">
                         <div class="stat-value">${stats.fat.toFixed(1)}g</div>
-                        <div class="stat-label">Fat</div>
+                        <div class="stat-label">Fat (${fatPct}%)</div>
                     </div>
                 </div>
-                
-                <h3 style="margin: 24px 0 12px 0; font-size: 16px; color: #374151;">Food Log</h3>
             `;
+            
+            // Keto indicator
+            if (carbsPct <= 10) {
+                html += '<div class="alert alert-success">✅ Deep ketosis range (carbs < 10%)</div>';
+            } else if (carbsPct <= 20) {
+                html += '<div class="alert alert-info">👍 Keto-friendly range (carbs < 20%)</div>';
+            }
+            
+            html += '<h3 style="margin: 24px 0 12px 0; font-size: 16px; color: #374151;">Food Log</h3>';
 
             dayEntries.forEach(entry => {
                 html += `
@@ -940,27 +538,6 @@ Return ONLY a valid JSON array, no explanation or markdown. Example format:
             });
 
             container.innerHTML = html;
-        }
-
-        function exportData() {
-            const dataStr = JSON.stringify(entries, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `macro-data-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            showAlert('Data exported!', 'success');
-        }
-
-        function clearAllData() {
-            if (!confirm('This will delete ALL your food entries. Are you sure?')) return;
-            if (!confirm('Really sure? This cannot be undone!')) return;
-            
-            entries = [];
-            localStorage.setItem('macro_entries', '[]');
-            loadStats();
-            showAlert('All data cleared', 'warning');
         }
     </script>
 </body>
