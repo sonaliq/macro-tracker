@@ -272,6 +272,16 @@
             display: block;
             margin-bottom: 4px;
         }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        
+        .btn-listening {
+            background: #ef4444 !important;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
@@ -290,6 +300,16 @@
 
     <!-- Logger Tab -->
     <div id="loggerTab" class="tab-content active">
+        <div class="card">
+            <h2>🎤 Voice Input</h2>
+            <p style="font-size: 14px; color: #666; margin-bottom: 12px;">
+                Speak what you ate, then manually enter the macros
+            </p>
+            <textarea id="voiceText" placeholder="Click the mic and speak, or type here..." readonly style="background: #f9fafb;"></textarea>
+            <button class="btn-primary" onclick="startVoice()" id="voiceBtn">🎤 Start Voice Input</button>
+            <button class="btn-secondary" onclick="clearVoice()">Clear Text</button>
+        </div>
+        
         <div class="card">
             <h2>Quick Add</h2>
             <button class="btn-secondary" onclick="quickAdd('2 eggs', 12, 1, 10)">🥚 2 Eggs</button>
@@ -538,6 +558,57 @@
             });
 
             container.innerHTML = html;
+        }
+        
+        function startVoice() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showAlert('Voice recognition not supported. Try Chrome browser.', 'info');
+                return;
+            }
+            
+            const voiceBtn = document.getElementById('voiceBtn');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = () => {
+                voiceBtn.textContent = '🔴 Listening...';
+                voiceBtn.classList.add('btn-listening');
+                showAlert('🎤 Listening... Speak now!', 'info');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('voiceText').value = transcript;
+                showAlert('✅ Got it! Now look up the macros and use Manual Entry below.', 'success');
+            };
+            
+            recognition.onend = () => {
+                voiceBtn.textContent = '🎤 Start Voice Input';
+                voiceBtn.classList.remove('btn-listening');
+            };
+            
+            recognition.onerror = (event) => {
+                voiceBtn.textContent = '🎤 Start Voice Input';
+                voiceBtn.classList.remove('btn-listening');
+                
+                let errorMsg = 'Voice input error';
+                if (event.error === 'no-speech') {
+                    errorMsg = 'No speech detected. Try again.';
+                } else if (event.error === 'not-allowed') {
+                    errorMsg = 'Microphone permission denied. Enable it in browser settings.';
+                }
+                showAlert(errorMsg, 'info');
+            };
+            
+            recognition.start();
+        }
+        
+        function clearVoice() {
+            document.getElementById('voiceText').value = '';
         }
     </script>
 </body>
