@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Macro Tracker</title>
+    <title>Macro Tracker Pro</title>
     <style>
         * {
             margin: 0;
@@ -53,8 +53,7 @@
         
         input[type="text"],
         input[type="number"],
-        input[type="date"],
-        textarea {
+        input[type="date"] {
             width: 100%;
             padding: 14px;
             border: 2px solid #e1e8ed;
@@ -64,15 +63,9 @@
             font-family: inherit;
         }
         
-        input:focus,
-        textarea:focus {
+        input:focus {
             outline: none;
             border-color: #667eea;
-        }
-        
-        textarea {
-            min-height: 100px;
-            resize: vertical;
         }
         
         button {
@@ -117,6 +110,17 @@
         
         .btn-secondary:active {
             background: #4b5563;
+        }
+        
+        .btn-small {
+            padding: 10px;
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+        
+        button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
         }
         
         .stats-grid {
@@ -218,6 +222,12 @@
             border-left: 4px solid #3b82f6;
         }
         
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+        
         .nav-tabs {
             display: flex;
             background: white;
@@ -273,6 +283,23 @@
             margin-bottom: 4px;
         }
         
+        .input-with-btn {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .input-with-btn input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .input-with-btn button {
+            width: auto;
+            padding: 14px 20px;
+            margin-bottom: 0;
+        }
+        
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.05); }
@@ -282,12 +309,52 @@
             background: #ef4444 !important;
             animation: pulse 1.5s ease-in-out infinite;
         }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .food-result {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .food-result:hover {
+            border-color: #667eea;
+            background: white;
+        }
+        
+        .food-result-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .food-result-macros {
+            font-size: 13px;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🥗 Macro Tracker</h1>
-        <p>Simple nutrition tracking for marathon training</p>
+        <h1>🥗 Macro Tracker Pro</h1>
+        <p>Voice input + Auto macro lookup from USDA</p>
     </div>
 
     <div id="alertContainer"></div>
@@ -301,38 +368,31 @@
     <!-- Logger Tab -->
     <div id="loggerTab" class="tab-content active">
         <div class="card">
-            <h2>🎤 Voice Input</h2>
+            <h2>Smart Food Entry</h2>
             <p style="font-size: 14px; color: #666; margin-bottom: 12px;">
-                Speak what you ate, then manually enter the macros
+                Type or speak a food name, then click "Look Up Macros"
             </p>
-            <textarea id="voiceText" placeholder="Click the mic and speak, or type here..." readonly style="background: #f9fafb;"></textarea>
-            <button class="btn-primary" onclick="startVoice()" id="voiceBtn">🎤 Start Voice Input</button>
-            <button class="btn-secondary" onclick="clearVoice()">Clear Text</button>
-        </div>
-        
-        <div class="card">
-            <h2>Quick Add</h2>
-            <button class="btn-secondary" onclick="quickAdd('2 eggs', 12, 1, 10)">🥚 2 Eggs</button>
-            <button class="btn-secondary" onclick="quickAdd('Avocado (half)', 1.5, 6, 11)">🥑 Half Avocado</button>
-            <button class="btn-secondary" onclick="quickAdd('Chicken breast 4oz', 35, 0, 4)">🍗 Chicken 4oz</button>
-            <button class="btn-secondary" onclick="quickAdd('Bacon (3 strips)', 9, 0, 12)">🥓 Bacon x3</button>
-            <button class="btn-secondary" onclick="quickAdd('Butter (1 tbsp)', 0, 0, 12)">🧈 Butter</button>
-            <button class="btn-secondary" onclick="quickAdd('Cheddar cheese (1oz)', 7, 0.4, 9)">🧀 Cheese 1oz</button>
-            <button class="btn-secondary" onclick="quickAdd('Salmon 6oz', 40, 0, 18)">🐟 Salmon 6oz</button>
-            <button class="btn-secondary" onclick="quickAdd('Ground beef 4oz', 28, 0, 20)">🍖 Ground Beef</button>
-            <button class="btn-secondary" onclick="quickAdd('Almonds 1oz', 6, 6, 14)">🥜 Almonds</button>
-            <button class="btn-secondary" onclick="quickAdd('Olive oil 1tbsp', 0, 0, 14)">🫒 Olive Oil</button>
-            <button class="btn-secondary" onclick="quickAdd('Broccoli 1 cup', 3, 6, 0)">🥦 Broccoli</button>
-            <button class="btn-secondary" onclick="quickAdd('Spinach 2 cups', 2, 2, 0)">🥬 Spinach</button>
+            
+            <input type="date" id="logDate">
+            
+            <div class="input-with-btn">
+                <input type="text" id="foodSearch" placeholder="e.g., chicken breast, salmon, eggs">
+                <button class="btn-primary" onclick="startVoice()" id="voiceBtn">🎤</button>
+            </div>
+            
+            <button class="btn-primary" onclick="lookupFood()" id="lookupBtn">
+                🔍 Look Up Macros
+            </button>
+            
+            <div id="searchResults"></div>
         </div>
 
         <div class="card">
             <h2>Manual Entry</h2>
             <p style="font-size: 14px; color: #666; margin-bottom: 12px;">
-                Add any food with custom macros
+                Or enter macros manually if you already know them
             </p>
-            <input type="date" id="logDate">
-            <input type="text" id="manualFoodName" placeholder="Food name (e.g., Greek yogurt 1 cup)">
+            <input type="text" id="manualFoodName" placeholder="Food name">
             <div class="grid-3">
                 <div>
                     <label>Protein (g)</label>
@@ -350,15 +410,14 @@
             <button class="btn-success" onclick="addManualEntry()">➕ Add to Log</button>
         </div>
         
-        <div class="card" style="background: #f0f9ff; border: 2px solid #3b82f6;">
-            <h2 style="color: #1e40af;">💡 Quick Tips</h2>
-            <p style="font-size: 14px; color: #1e40af; line-height: 1.6;">
-                <strong>Look up macros:</strong><br>
-                • USDA Database: <a href="https://fdc.nal.usda.gov/" target="_blank" style="color: #2563eb;">fdc.nal.usda.gov</a><br>
-                • Google: "chicken breast 6oz macros"<br>
-                • Nutrition labels on packages<br><br>
-                <strong>Takes 10 seconds!</strong> More accurate than AI parsing.
-            </p>
+        <div class="card">
+            <h2>Quick Add Favorites</h2>
+            <button class="btn-secondary" onclick="quickAdd('2 eggs', 12, 1, 10)">🥚 2 Eggs</button>
+            <button class="btn-secondary" onclick="quickAdd('Avocado (half)', 1.5, 6, 11)">🥑 Half Avocado</button>
+            <button class="btn-secondary" onclick="quickAdd('Chicken breast 4oz', 35, 0, 4)">🍗 Chicken 4oz</button>
+            <button class="btn-secondary" onclick="quickAdd('Bacon (3 strips)', 9, 0, 12)">🥓 Bacon x3</button>
+            <button class="btn-secondary" onclick="quickAdd('Salmon 6oz', 40, 0, 18)">🐟 Salmon 6oz</button>
+            <button class="btn-secondary" onclick="quickAdd('Almonds 1oz', 6, 6, 14)">🥜 Almonds</button>
         </div>
     </div>
 
@@ -394,7 +453,7 @@
             
             setTimeout(() => {
                 alert.remove();
-            }, 3000);
+            }, 4000);
         }
 
         function switchTab(tab) {
@@ -415,6 +474,137 @@
             }
         }
 
+        function startVoice() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showAlert('Voice recognition not supported. Try Chrome browser.', 'warning');
+                return;
+            }
+            
+            const voiceBtn = document.getElementById('voiceBtn');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = () => {
+                voiceBtn.innerHTML = '🔴';
+                voiceBtn.classList.add('btn-listening');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('foodSearch').value = transcript;
+                showAlert('Got it! Click "Look Up Macros" to search.', 'success');
+            };
+            
+            recognition.onend = () => {
+                voiceBtn.innerHTML = '🎤';
+                voiceBtn.classList.remove('btn-listening');
+            };
+            
+            recognition.onerror = (event) => {
+                voiceBtn.innerHTML = '🎤';
+                voiceBtn.classList.remove('btn-listening');
+                
+                if (event.error === 'not-allowed') {
+                    showAlert('Microphone permission denied.', 'warning');
+                }
+            };
+            
+            recognition.start();
+        }
+
+        async function lookupFood() {
+            const query = document.getElementById('foodSearch').value.trim();
+            
+            if (!query) {
+                showAlert('Please enter or speak a food name', 'warning');
+                return;
+            }
+            
+            const lookupBtn = document.getElementById('lookupBtn');
+            const resultsDiv = document.getElementById('searchResults');
+            
+            lookupBtn.disabled = true;
+            lookupBtn.innerHTML = '<span class="spinner"></span> Searching USDA...';
+            resultsDiv.innerHTML = '';
+            
+            try {
+                // USDA FoodData Central API (no key required for basic searches)
+                const response = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=DEMO_KEY&query=${encodeURIComponent(query)}&pageSize=5`);
+                
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+                
+                const data = await response.json();
+                
+                if (!data.foods || data.foods.length === 0) {
+                    resultsDiv.innerHTML = '<div class="alert alert-info">No results found. Try a different search or use Manual Entry.</div>';
+                    return;
+                }
+                
+                let html = '<h3 style="margin: 16px 0 12px 0; font-size: 16px;">Select a food:</h3>';
+                
+                data.foods.slice(0, 5).forEach(food => {
+                    const nutrients = food.foodNutrients || [];
+                    
+                    // Extract macros
+                    const proteinNutrient = nutrients.find(n => n.nutrientName === 'Protein' || n.nutrientId === 1003);
+                    const carbsNutrient = nutrients.find(n => n.nutrientName === 'Carbohydrate, by difference' || n.nutrientId === 1005);
+                    const fatNutrient = nutrients.find(n => n.nutrientName === 'Total lipid (fat)' || n.nutrientId === 1004);
+                    
+                    const protein = proteinNutrient ? proteinNutrient.value : 0;
+                    const carbs = carbsNutrient ? carbsNutrient.value : 0;
+                    const fat = fatNutrient ? fatNutrient.value : 0;
+                    
+                    const calories = (protein * 4) + (carbs * 4) + (fat * 9);
+                    
+                    html += `
+                        <div class="food-result" onclick="selectFood('${food.description.replace(/'/g, "\\'")}', ${protein}, ${carbs}, ${fat})">
+                            <div class="food-result-name">${food.description}</div>
+                            <div class="food-result-macros">
+                                ${calories.toFixed(0)} cal • 
+                                P: ${protein.toFixed(1)}g • 
+                                C: ${carbs.toFixed(1)}g • 
+                                F: ${fat.toFixed(1)}g
+                                (per 100g)
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultsDiv.innerHTML = html;
+                showAlert('Tap a result to add it to your log', 'success');
+                
+            } catch (error) {
+                console.error('Lookup error:', error);
+                resultsDiv.innerHTML = '<div class="alert alert-warning">⚠️ Could not connect to USDA database. Try Manual Entry instead.</div>';
+            } finally {
+                lookupBtn.disabled = false;
+                lookupBtn.innerHTML = '🔍 Look Up Macros';
+            }
+        }
+
+        function selectFood(name, protein, carbs, fat) {
+            // Pre-fill manual entry with the selected food
+            document.getElementById('manualFoodName').value = name;
+            document.getElementById('manualProtein').value = protein.toFixed(1);
+            document.getElementById('manualCarbs').value = carbs.toFixed(1);
+            document.getElementById('manualFat').value = fat.toFixed(1);
+            
+            // Scroll to manual entry
+            document.getElementById('manualFoodName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            showAlert('Macros loaded! Adjust if needed and click "Add to Log"', 'success');
+            
+            // Clear search results
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('foodSearch').value = '';
+        }
+
         function quickAdd(name, protein, carbs, fat) {
             const logDate = document.getElementById('logDate').value;
             addEntry(name, protein, carbs, fat, logDate);
@@ -433,7 +623,7 @@
             const logDate = document.getElementById('logDate').value;
 
             if (!name) {
-                showAlert('Please enter a food name', 'info');
+                showAlert('Please enter a food name', 'warning');
                 return;
             }
 
@@ -487,7 +677,7 @@
                     <div class="empty-state">
                         <div style="font-size: 48px; margin-bottom: 12px;">🍽️</div>
                         <div>No food logged for this day</div>
-                        <div style="font-size: 12px; margin-top: 8px;">Use Quick Add or Manual Entry to start tracking</div>
+                        <div style="font-size: 12px; margin-top: 8px;">Use Smart Entry or Quick Add to start tracking</div>
                     </div>
                 `;
                 return;
@@ -500,7 +690,6 @@
                 fat: dayEntries.reduce((sum, e) => sum + e.fat, 0)
             };
 
-            // Calculate percentages
             const proteinCals = stats.protein * 4;
             const carbsCals = stats.carbs * 4;
             const fatCals = stats.fat * 9;
@@ -531,7 +720,6 @@
                 </div>
             `;
             
-            // Keto indicator
             if (carbsPct <= 10) {
                 html += '<div class="alert alert-success">✅ Deep ketosis range (carbs < 10%)</div>';
             } else if (carbsPct <= 20) {
@@ -558,57 +746,6 @@
             });
 
             container.innerHTML = html;
-        }
-        
-        function startVoice() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                showAlert('Voice recognition not supported. Try Chrome browser.', 'info');
-                return;
-            }
-            
-            const voiceBtn = document.getElementById('voiceBtn');
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-            
-            recognition.onstart = () => {
-                voiceBtn.textContent = '🔴 Listening...';
-                voiceBtn.classList.add('btn-listening');
-                showAlert('🎤 Listening... Speak now!', 'info');
-            };
-            
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('voiceText').value = transcript;
-                showAlert('✅ Got it! Now look up the macros and use Manual Entry below.', 'success');
-            };
-            
-            recognition.onend = () => {
-                voiceBtn.textContent = '🎤 Start Voice Input';
-                voiceBtn.classList.remove('btn-listening');
-            };
-            
-            recognition.onerror = (event) => {
-                voiceBtn.textContent = '🎤 Start Voice Input';
-                voiceBtn.classList.remove('btn-listening');
-                
-                let errorMsg = 'Voice input error';
-                if (event.error === 'no-speech') {
-                    errorMsg = 'No speech detected. Try again.';
-                } else if (event.error === 'not-allowed') {
-                    errorMsg = 'Microphone permission denied. Enable it in browser settings.';
-                }
-                showAlert(errorMsg, 'info');
-            };
-            
-            recognition.start();
-        }
-        
-        function clearVoice() {
-            document.getElementById('voiceText').value = '';
         }
     </script>
 </body>
