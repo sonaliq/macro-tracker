@@ -21,6 +21,19 @@
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Check if Supabase loaded
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (typeof window.supabase === 'undefined') {
+                    alert('ERROR: Supabase library failed to load. Check your internet connection and refresh the page.');
+                    console.error('Supabase library not loaded');
+                } else {
+                    console.log('✓ Supabase library loaded successfully');
+                }
+            }, 2000);
+        });
+    </script>
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -366,7 +379,7 @@
             <input type="text" id="supabaseUrl" placeholder="Supabase Project URL">
             <input type="password" id="supabaseKey" placeholder="Supabase Anon Key">
             
-            <button class="btn-primary" onclick="setupSupabase()">💾 Connect & Save</button>
+            <button class="btn-primary" onclick="setupSupabase()" id="connectBtn">💾 Connect & Save</button>
             
             <div class="alert alert-info">
                 <strong>📝 How to get these:</strong><br>
@@ -499,39 +512,71 @@
         });
         
         function setupSupabase() {
-            console.log('Setup button clicked');
+            const btn = document.getElementById('connectBtn');
+            btn.textContent = '⏳ Connecting...';
+            btn.disabled = true;
+            
+            console.log('=== SETUP START ===');
+            console.log('Button clicked');
+            
+            // Check if Supabase library is loaded
+            if (typeof window.supabase === 'undefined') {
+                alert('ERROR: Supabase library not loaded! Please refresh the page and try again.');
+                console.error('Supabase library not available');
+                btn.textContent = '💾 Connect & Save';
+                btn.disabled = false;
+                return;
+            }
+            console.log('✓ Supabase library available');
             
             const url = document.getElementById('supabaseUrl').value.trim();
             const key = document.getElementById('supabaseKey').value.trim();
             
             console.log('URL:', url);
             console.log('Key length:', key.length);
+            console.log('Key starts with:', key.substring(0, 10));
             
             if (!url || !key) {
                 alert('Please enter both URL and Key');
-                showError('setupError', 'Please enter both URL and Key');
+                console.error('Missing URL or Key');
+                btn.textContent = '💾 Connect & Save';
+                btn.disabled = false;
                 return;
             }
+            console.log('✓ URL and Key provided');
             
             // Save credentials
             try {
                 localStorage.setItem('supabase_url', url);
                 localStorage.setItem('supabase_key', key);
-                console.log('Credentials saved to localStorage');
+                console.log('✓ Credentials saved to localStorage');
+                
+                // Verify save
+                const savedUrl = localStorage.getItem('supabase_url');
+                const savedKey = localStorage.getItem('supabase_key');
+                console.log('✓ Verified - saved URL:', savedUrl);
+                console.log('✓ Verified - saved Key length:', savedKey ? savedKey.length : 0);
                 
                 // Initialize Supabase
+                console.log('Creating Supabase client...');
                 supabase = window.supabase.createClient(url, key);
-                console.log('Supabase client created');
+                console.log('✓ Supabase client created');
+                console.log('Client object:', supabase);
                 
-                alert('✅ Connected! The database table is already set up. Click OK to continue.');
+                alert('✅ Connected successfully! Click OK to continue.');
+                console.log('=== SETUP COMPLETE ===');
                 
-                // Skip table creation (already done)
+                // Initialize app
                 initializeApp();
                 
             } catch (error) {
-                console.error('Setup error:', error);
-                alert('Error: ' + error.message);
-                showError('setupError', 'Connection failed: ' + error.message);
+                console.error('=== SETUP ERROR ===');
+                console.error('Error:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                alert('Error: ' + error.message + '\n\nCheck console for details.');
+                btn.textContent = '💾 Connect & Save';
+                btn.disabled = false;
             }
         }
         
