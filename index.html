@@ -759,11 +759,14 @@
             
             <button class="btn-primary" onclick="exportData()">📥 Download Backup (JSON)</button>
             <button class="btn-secondary" onclick="showImportDialog()">📤 Restore from Backup</button>
+            <button class="btn-secondary" onclick="testStorage()">🔍 Test Storage</button>
             <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
             
             <div style="margin-top: 16px; padding: 12px; background: #fff3cd; border-radius: 8px; font-size: 13px;">
                 <strong>⚠️ Important:</strong> Data is stored in your browser. If you clear browser data, your logs will be deleted. Use backup regularly!
             </div>
+            
+            <div id="storageTestResult" style="margin-top: 12px; padding: 12px; background: #f3f4f6; border-radius: 8px; font-size: 13px; display: none;"></div>
         </div>
     </div>
     
@@ -804,11 +807,34 @@
                 console.log('Storage key:', storageKey);
                 console.log('Entries to save:', entries.length);
                 
-                localStorage.setItem(storageKey, JSON.stringify(entries));
-                
-                // Verify save
-                const saved = localStorage.getItem(storageKey);
-                console.log('Verification - data saved successfully:', saved !== null);
+                try {
+                    // Test if localStorage is available
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    
+                    // Save the data
+                    const dataStr = JSON.stringify(entries);
+                    localStorage.setItem(storageKey, dataStr);
+                    
+                    // Verify save immediately
+                    const saved = localStorage.getItem(storageKey);
+                    if (saved) {
+                        console.log('✓ Data saved successfully, size:', (saved.length / 1024).toFixed(2), 'KB');
+                        const parsed = JSON.parse(saved);
+                        console.log('✓ Verified:', parsed.length, 'entries can be read back');
+                    } else {
+                        console.error('✗ Save failed - data not in localStorage!');
+                        showAlert('⚠️ Warning: Data may not be saving properly!', 'warning');
+                    }
+                } catch (error) {
+                    console.error('✗ localStorage error:', error);
+                    showAlert('⚠️ Error saving data: ' + error.message, 'error');
+                    
+                    // Try to show helpful message
+                    if (error.name === 'QuotaExceededError') {
+                        showAlert('Storage full! Please download a backup and clear old data.', 'error');
+                    }
+                }
             }
         }
 
@@ -819,6 +845,37 @@
                 showMainApp();
             } else {
                 document.getElementById('profileSelector').style.display = 'flex';
+            }
+        });
+        
+        // Save data before page unload
+        window.addEventListener('beforeunload', function() {
+            if (currentUser && entries.length > 0) {
+                saveUserData();
+                console.log('Saving data before page close...');
+            }
+        });
+        
+        // Periodic auto-save every 30 seconds
+        setInterval(function() {
+            if (currentUser && entries.length > 0) {
+                saveUserData();
+                console.log('Auto-save triggered - entries:', entries.length);
+            }
+        }, 30000);
+        
+        // Also save when visibility changes (app goes to background)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && currentUser) {
+                saveUserData();
+                console.log('Saving data - app going to background');
+            } else if (!document.hidden && currentUser) {
+                loadUserData();
+                console.log('Reloading data - app coming to foreground');
+                if (currentTab === 'stats') {
+                    loadStats();
+                    renderCalendar();
+                }
             }
         });
         
@@ -983,6 +1040,89 @@
             
             reader.readAsText(file);
             event.target.value = ''; // Reset file input
+        }
+        
+        function testStorage() {
+            const resultDiv = document.getElementById('storageTestResult');
+            resultDiv.style.display = 'block';
+            
+            let results = '<strong>Storage Test Results:</strong><br><br>';
+            
+            // Test 1: localStorage available
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    results += '✅ localStorage is supported<br>';
+                } else {
+                    results += '❌ localStorage is NOT supported<br>';
+                    resultDiv.innerHTML = results;
+                    return;
+                }
+            } catch (e) {
+                results += '❌ Error checking storage: ' + e.message + '<br>';
+                resultDiv.innerHTML = results;
+                return;
+            }
+            
+            // Test 2: Can write to localStorage
+            try {
+                localStorage.setItem('test_write', 'test_value');
+                results += '✅ Can write to localStorage<br>';
+            } catch (e) {
+                results += '❌ Cannot write to localStorage: ' + e.message + '<br>';
+                resultDiv.innerHTML = results;
+                return;
+            }
+            
+            // Test 3: Can read from localStorage
+            try {
+                const testValue = localStorage.getItem('test_write');
+                if (testValue === 'test_value') {
+                    results += '✅ Can read from localStorage<br>';
+                    localStorage.removeItem('test_write');
+                } else {
+                    results += '❌ Read value doesn\'t match<br>';
+                }
+            } catch (e) {
+                results += '❌ Cannot read from localStorage: ' + e.message + '<br>';
+            }
+            
+            // Test 4: Check current data
+            const storageKey = `macro_entries_${currentUser}`;
+            const currentData = localStorage.getItem(storageKey);
+            if (currentData) {
+                try {
+                    const parsed = JSON.parse(currentData);
+                    results += `✅ Found ${parsed.length} entries in storage<br>`;
+                    results += `📊 Data size: ${(currentData.length / 1024).toFixed(2)} KB<br>`;
+                } catch (e) {
+                    results += '❌ Data exists but is corrupted<br>';
+                }
+            } else {
+                results += '⚠️ No data found in storage (this is OK if you just started)<br>';
+            }
+            
+            // Test 5: Storage quota
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(estimate => {
+                    const usage = (estimate.usage / 1024 / 1024).toFixed(2);
+                    const quota = (estimate.quota / 1024 / 1024).toFixed(2);
+                    const percent = ((estimate.usage / estimate.quota) * 100).toFixed(1);
+                    results += `📦 Storage used: ${usage} MB / ${quota} MB (${percent}%)<br>`;
+                    resultDiv.innerHTML = results;
+                });
+            } else {
+                results += '⚠️ Cannot check storage quota on this browser<br>';
+                resultDiv.innerHTML = results;
+            }
+            
+            results += '<br><strong>Diagnosis:</strong><br>';
+            if (currentData && JSON.parse(currentData).length > 0) {
+                results += '✅ Everything looks good! Data is being saved properly.';
+            } else {
+                results += '⚠️ No data stored yet. Add some food and run test again.';
+            }
+            
+            resultDiv.innerHTML = results;
         }
 
         function startVoice() {
