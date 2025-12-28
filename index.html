@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Macro Tracker Pro</title>
+    <title>Macro Tracker</title>
     
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,27 +12,12 @@
     <meta name="theme-color" content="#667eea">
     
     <!-- App Icons -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23667eea'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='280' fill='white'>🥗</text></svg>">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🥗</text></svg>">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     
-    <!-- Manifest -->
-    <link rel="manifest" href="data:application/json,{
-        'name': 'Macro Tracker',
-        'short_name': 'Macros',
-        'description': 'Track your macros with voice input and AI',
-        'start_url': './',
-        'display': 'standalone',
-        'background_color': '%23667eea',
-        'theme_color': '%23667eea',
-        'icons': [
-            {
-                'src': 'data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27><rect width=%27512%27 height=%27512%27 rx=%27100%27 fill=%27%23667eea%27/><text x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 font-size=%27280%27 fill=%27white%27>🥗</text></svg>',
-                'sizes': '512x512',
-                'type': 'image/svg+xml',
-                'purpose': 'any maskable'
-            }
-        ]
-    }">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -257,6 +242,12 @@
             background: #fef3c7;
             color: #92400e;
             border-left: 4px solid #f59e0b;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
         }
         
         .nav-tabs {
@@ -752,6 +743,28 @@
                 <canvas id="calorieChart"></canvas>
             </div>
         </div>
+        
+        <div class="card">
+            <h2>💾 Data Management</h2>
+            <p style="font-size: 14px; color: #666; margin-bottom: 12px;">
+                Backup your data or check storage status
+            </p>
+            
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px;">
+                <div><strong>Current User:</strong> <span id="debugUser"></span></div>
+                <div><strong>Total Entries:</strong> <span id="debugEntries"></span></div>
+                <div><strong>Storage Used:</strong> <span id="debugStorage"></span></div>
+                <div><strong>Date Range:</strong> <span id="debugDateRange"></span></div>
+            </div>
+            
+            <button class="btn-primary" onclick="exportData()">📥 Download Backup (JSON)</button>
+            <button class="btn-secondary" onclick="showImportDialog()">📤 Restore from Backup</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+            
+            <div style="margin-top: 16px; padding: 12px; background: #fff3cd; border-radius: 8px; font-size: 13px;">
+                <strong>⚠️ Important:</strong> Data is stored in your browser. If you clear browser data, your logs will be deleted. Use backup regularly!
+            </div>
+        </div>
     </div>
     
     </div> <!-- End mainApp -->
@@ -771,14 +784,31 @@
         // Load entries for current user
         function loadUserData() {
             if (currentUser) {
-                entries = JSON.parse(localStorage.getItem(`macro_entries_${currentUser}`) || '[]');
+                const storageKey = `macro_entries_${currentUser}`;
+                const storedData = localStorage.getItem(storageKey);
+                console.log('Loading data for user:', currentUser);
+                console.log('Storage key:', storageKey);
+                console.log('Raw data from localStorage:', storedData);
+                
+                entries = JSON.parse(storedData || '[]');
+                console.log('Parsed entries:', entries.length, 'items');
+                console.log('First entry:', entries[0]);
             }
         }
         
         // Save entries for current user
         function saveUserData() {
             if (currentUser) {
-                localStorage.setItem(`macro_entries_${currentUser}`, JSON.stringify(entries));
+                const storageKey = `macro_entries_${currentUser}`;
+                console.log('Saving data for user:', currentUser);
+                console.log('Storage key:', storageKey);
+                console.log('Entries to save:', entries.length);
+                
+                localStorage.setItem(storageKey, JSON.stringify(entries));
+                
+                // Verify save
+                const saved = localStorage.getItem(storageKey);
+                console.log('Verification - data saved successfully:', saved !== null);
             }
         }
 
@@ -855,7 +885,104 @@
                 loadStats();
                 loadCharts();
                 renderCalendar();
+                updateDebugInfo();
             }
+        }
+        
+        function updateDebugInfo() {
+            // Update debug information
+            document.getElementById('debugUser').textContent = currentUser || 'None';
+            document.getElementById('debugEntries').textContent = entries.length;
+            
+            // Calculate storage size
+            const dataStr = JSON.stringify(entries);
+            const bytes = new Blob([dataStr]).size;
+            const kb = (bytes / 1024).toFixed(2);
+            document.getElementById('debugStorage').textContent = `${kb} KB`;
+            
+            // Date range
+            if (entries.length > 0) {
+                const dates = entries.map(e => e.date).sort();
+                const firstDate = dates[0];
+                const lastDate = dates[dates.length - 1];
+                document.getElementById('debugDateRange').textContent = `${firstDate} to ${lastDate}`;
+            } else {
+                document.getElementById('debugDateRange').textContent = 'No entries yet';
+            }
+        }
+        
+        function exportData() {
+            if (entries.length === 0) {
+                showAlert('No data to export', 'warning');
+                return;
+            }
+            
+            const data = {
+                user: currentUser,
+                exportDate: new Date().toISOString(),
+                entries: entries
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `macro-tracker-${currentUser}-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showAlert('✅ Backup downloaded!', 'success');
+        }
+        
+        function showImportDialog() {
+            document.getElementById('importFile').click();
+        }
+        
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.entries || !Array.isArray(data.entries)) {
+                        throw new Error('Invalid backup file format');
+                    }
+                    
+                    const confirmMsg = `Import ${data.entries.length} entries? This will ADD to your current data (not replace).`;
+                    if (!confirm(confirmMsg)) return;
+                    
+                    // Add imported entries
+                    data.entries.forEach(entry => {
+                        // Check if entry already exists (by date and food name)
+                        const exists = entries.some(e => 
+                            e.date === entry.date && 
+                            e.food === entry.food && 
+                            e.protein === entry.protein
+                        );
+                        if (!exists) {
+                            entries.push(entry);
+                        }
+                    });
+                    
+                    saveUserData();
+                    loadStats();
+                    renderCalendar();
+                    updateDebugInfo();
+                    
+                    showAlert(`✅ Imported ${data.entries.length} entries!`, 'success');
+                    
+                } catch (error) {
+                    showAlert('❌ Error importing file: ' + error.message, 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
         }
 
         function startVoice() {
