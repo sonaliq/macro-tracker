@@ -681,6 +681,17 @@
             <button class="btn-success" onclick="addManualEntry()">➕ Add to Log</button>
         </div>
         
+        <div class="card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-align: center;">
+            <h2 style="color: white; margin-bottom: 8px;">💾 SAVE YOUR DATA</h2>
+            <p style="font-size: 13px; margin-bottom: 16px; opacity: 0.9;">
+                Tap this button after logging food to ensure data persists!
+            </p>
+            <button class="btn-primary" onclick="forceSave()" style="background: white; color: #10b981; font-size: 18px; font-weight: 700;">
+                💾 SAVE NOW
+            </button>
+            <div id="saveStatus" style="margin-top: 12px; font-size: 13px; min-height: 20px;"></div>
+        </div>
+        
         <div class="card">
             <h2>Quick Add Favorites</h2>
             <button class="btn-secondary" onclick="quickAdd('2 eggs', 12, 1, 10)">🥚 2 Eggs</button>
@@ -788,14 +799,32 @@
         function loadUserData() {
             if (currentUser) {
                 const storageKey = `macro_entries_${currentUser}`;
+                const backupKey = `macro_entries_${currentUser}_backup`;
                 const storedData = localStorage.getItem(storageKey);
+                
                 console.log('Loading data for user:', currentUser);
                 console.log('Storage key:', storageKey);
                 console.log('Raw data from localStorage:', storedData);
                 
-                entries = JSON.parse(storedData || '[]');
-                console.log('Parsed entries:', entries.length, 'items');
-                console.log('First entry:', entries[0]);
+                if (storedData) {
+                    entries = JSON.parse(storedData);
+                    console.log('Parsed entries:', entries.length, 'items');
+                    console.log('First entry:', entries[0]);
+                } else {
+                    // Try to recover from backup
+                    console.log('Main storage empty, checking backup...');
+                    const backupData = localStorage.getItem(backupKey);
+                    if (backupData) {
+                        console.log('✓ Found backup data, restoring...');
+                        entries = JSON.parse(backupData);
+                        // Restore to main storage
+                        localStorage.setItem(storageKey, backupData);
+                        showAlert(`Restored ${entries.length} entries from backup!`, 'info');
+                    } else {
+                        entries = [];
+                        console.log('No data found (new user or data lost)');
+                    }
+                }
             }
         }
         
@@ -1123,6 +1152,51 @@
             }
             
             resultDiv.innerHTML = results;
+        }
+        
+        function forceSave() {
+            const statusDiv = document.getElementById('saveStatus');
+            statusDiv.innerHTML = '💾 Saving...';
+            
+            try {
+                // Method 1: Regular localStorage
+                saveUserData();
+                
+                // Method 2: Also save to a backup key
+                const backupKey = `macro_entries_${currentUser}_backup`;
+                localStorage.setItem(backupKey, JSON.stringify(entries));
+                
+                // Method 3: Save timestamp
+                localStorage.setItem(`last_save_${currentUser}`, new Date().toISOString());
+                
+                // Verify all saves
+                const verify1 = localStorage.getItem(`macro_entries_${currentUser}`);
+                const verify2 = localStorage.getItem(backupKey);
+                
+                if (verify1 && verify2) {
+                    const count = entries.length;
+                    statusDiv.innerHTML = `✅ Saved ${count} entries successfully!<br><small>${new Date().toLocaleTimeString()}</small>`;
+                    statusDiv.style.color = 'white';
+                    
+                    // Also try to persist storage permission on Android
+                    if (navigator.storage && navigator.storage.persist) {
+                        navigator.storage.persist().then(persistent => {
+                            if (persistent) {
+                                console.log('✓ Storage persistence granted');
+                            }
+                        });
+                    }
+                    
+                    showAlert('✅ Data saved!', 'success');
+                } else {
+                    throw new Error('Verification failed');
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Save failed: ' + error.message;
+                statusDiv.style.color = '#fee2e2';
+                showAlert('⚠️ Error saving: ' + error.message, 'error');
+            }
         }
 
         function startVoice() {
