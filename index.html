@@ -11,33 +11,6 @@
     <meta name="apple-mobile-web-app-title" content="Macro Tracker">
     <meta name="theme-color" content="#667eea">
     
-    <!-- App Icons -->
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Check if Supabase loaded
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                if (typeof window.supabase === 'undefined') {
-                    alert('ERROR: Supabase library failed to load. Check your internet connection and refresh the page.');
-                    console.error('Supabase library not loaded');
-                } else {
-                    console.log('✓ Supabase library loaded successfully');
-                }
-            }, 2000);
-        });
-    </script>
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
     <style>
         * {
             margin: 0;
@@ -77,22 +50,6 @@
             border-radius: 8px;
             font-size: 12px;
             margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .sync-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #10b981;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
         
         .card {
@@ -111,8 +68,7 @@
         
         input[type="text"],
         input[type="number"],
-        input[type="date"],
-        input[type="password"] {
+        input[type="date"] {
             width: 100%;
             padding: 14px;
             border: 2px solid #e1e8ed;
@@ -171,20 +127,9 @@
             background: #4b5563;
         }
         
-        .btn-small {
-            padding: 10px;
-            font-size: 14px;
-            margin-bottom: 0;
-        }
-        
         button:disabled {
             background: #d1d5db;
             cursor: not-allowed;
-        }
-        
-        .setup-screen {
-            max-width: 500px;
-            margin: 40px auto;
         }
         
         .alert {
@@ -305,23 +250,6 @@
             margin-bottom: 4px;
         }
         
-        .input-with-btn {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .input-with-btn input {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        
-        .input-with-btn button {
-            width: auto;
-            padding: 14px 20px;
-            margin-bottom: 0;
-        }
-        
         .entry {
             background: #f9fafb;
             padding: 16px;
@@ -361,36 +289,19 @@
             margin: 0;
             margin-left: 12px;
         }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-    <!-- Setup Screen -->
-    <div id="setupScreen" class="setup-screen">
-        <div class="card">
-            <h1 style="text-align: center; color: #667eea; margin-bottom: 8px;">🥗 Macro Tracker</h1>
-            <p style="text-align: center; color: #666; margin-bottom: 24px;">Cloud-Synced Edition</p>
-            
-            <h2>🔧 Setup Supabase Connection</h2>
-            <p style="font-size: 14px; color: #666; margin-bottom: 16px;">
-                Enter your Supabase credentials to enable cloud sync.
-                <a href="https://supabase.com" target="_blank" style="color: #667eea;">Create free account →</a>
-            </p>
-            
-            <input type="text" id="supabaseUrl" placeholder="Supabase Project URL">
-            <input type="password" id="supabaseKey" placeholder="Supabase Anon Key">
-            
-            <button class="btn-primary" onclick="setupSupabase()" id="connectBtn">💾 Connect & Save</button>
-            
-            <div class="alert alert-info">
-                <strong>📝 How to get these:</strong><br>
-                1. Go to supabase.com → Create project<br>
-                2. Settings → API<br>
-                3. Copy "Project URL" and "anon public" key
-            </div>
-            
-            <div id="setupError" class="hidden alert-error"></div>
-            <div id="setupSuccess" class="hidden alert-success"></div>
-        </div>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading">
+        <h2>⏳ Loading Macro Tracker...</h2>
+        <p style="margin-top: 12px;">Connecting to cloud database...</p>
     </div>
 
     <!-- Profile Selector -->
@@ -420,8 +331,7 @@
                     <h1>🥗 Macro Tracker</h1>
                     <p>Cloud-synced • Never lose data</p>
                     <div class="sync-status">
-                        <div class="sync-indicator"></div>
-                        <span id="syncStatus">Synced with cloud</span>
+                        <span id="syncStatus">☁️ Synced</span>
                     </div>
                 </div>
                 <button class="switch-user-btn" onclick="switchUser()">
@@ -441,6 +351,7 @@
             <button class="btn-secondary" onclick="quickAdd('Avocado (half)', 1.5, 6, 11)">🥑 Half Avocado</button>
             <button class="btn-secondary" onclick="quickAdd('Chicken breast 4oz', 35, 0, 4)">🍗 Chicken 4oz</button>
             <button class="btn-secondary" onclick="quickAdd('Bacon (3 strips)', 9, 0, 12)">🥓 Bacon x3</button>
+            <button class="btn-secondary" onclick="quickAdd('Salmon 6oz', 40, 0, 18)">🐟 Salmon 6oz</button>
         </div>
 
         <!-- Manual Entry -->
@@ -471,183 +382,60 @@
         </div>
     </div>
 
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+
     <script>
+        // HARDCODED CREDENTIALS - No setup needed!
+        const SUPABASE_URL = 'https://hloypaswgnhmwfovfumv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhsb3lwYXN3Z25obXdmb3ZmdW12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTg1OTksImV4cCI6MjA4MjQ3NDU5OX0.LtKee_acyRF2LjxU-hi_TDT5PkgectpWCcEikOVcbdM';
+        
         // Global state
         let supabase = null;
         let currentUser = null;
         let entries = [];
         
-        // Check if setup is complete
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded');
-            console.log('Supabase library loaded:', typeof window.supabase !== 'undefined');
-            
-            const savedUrl = localStorage.getItem('supabase_url');
-            const savedKey = localStorage.getItem('supabase_key');
-            
-            console.log('Saved URL:', savedUrl);
-            console.log('Saved Key exists:', !!savedKey);
-            
-            if (savedUrl && savedKey) {
-                // Initialize Supabase
-                try {
-                    supabase = window.supabase.createClient(savedUrl, savedKey);
-                    console.log('Supabase initialized from saved credentials');
-                    initializeApp();
-                } catch (error) {
-                    console.error('Error initializing Supabase:', error);
-                    alert('Error loading app: ' + error.message);
-                    document.getElementById('setupScreen').classList.remove('hidden');
-                }
-            } else {
-                // Show setup screen
-                console.log('No saved credentials, showing setup screen');
-                document.getElementById('setupScreen').classList.remove('hidden');
-            }
-            
-            // Set today's date
-            const today = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('logDate');
-            if (dateInput) dateInput.value = today;
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            setTimeout(initApp, 1000);
         });
         
-        function setupSupabase() {
-            const btn = document.getElementById('connectBtn');
-            btn.textContent = '⏳ Connecting...';
-            btn.disabled = true;
+        function initApp() {
+            console.log('Initializing app...');
             
-            console.log('=== SETUP START ===');
-            console.log('Button clicked');
-            
-            // Check if Supabase library is loaded
-            if (typeof window.supabase === 'undefined') {
-                alert('ERROR: Supabase library not loaded! Please refresh the page and try again.');
-                console.error('Supabase library not available');
-                btn.textContent = '💾 Connect & Save';
-                btn.disabled = false;
-                return;
-            }
-            console.log('✓ Supabase library available');
-            
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            
-            console.log('URL:', url);
-            console.log('Key length:', key.length);
-            console.log('Key starts with:', key.substring(0, 10));
-            
-            if (!url || !key) {
-                alert('Please enter both URL and Key');
-                console.error('Missing URL or Key');
-                btn.textContent = '💾 Connect & Save';
-                btn.disabled = false;
-                return;
-            }
-            console.log('✓ URL and Key provided');
-            
-            // Save credentials
             try {
-                localStorage.setItem('supabase_url', url);
-                localStorage.setItem('supabase_key', key);
-                console.log('✓ Credentials saved to localStorage');
+                // Check if Supabase loaded
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error('Supabase library failed to load');
+                }
                 
-                // Verify save
-                const savedUrl = localStorage.getItem('supabase_url');
-                const savedKey = localStorage.getItem('supabase_key');
-                console.log('✓ Verified - saved URL:', savedUrl);
-                console.log('✓ Verified - saved Key length:', savedKey ? savedKey.length : 0);
+                // Initialize Supabase client
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('✓ Supabase initialized');
                 
-                // Initialize Supabase
-                console.log('Creating Supabase client...');
-                supabase = window.supabase.createClient(url, key);
-                console.log('✓ Supabase client created');
-                console.log('Client object:', supabase);
+                // Hide loading, show profile selector
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('profileSelector').classList.remove('hidden');
                 
-                alert('✅ Connected successfully! Click OK to continue.');
-                console.log('=== SETUP COMPLETE ===');
-                
-                // Initialize app
-                initializeApp();
+                // Set today's date
+                const today = new Date().toISOString().split('T')[0];
+                setTimeout(() => {
+                    const dateInput = document.getElementById('logDate');
+                    if (dateInput) dateInput.value = today;
+                }, 100);
                 
             } catch (error) {
-                console.error('=== SETUP ERROR ===');
-                console.error('Error:', error);
-                console.error('Error message:', error.message);
-                console.error('Error stack:', error.stack);
-                alert('Error: ' + error.message + '\n\nCheck console for details.');
-                btn.textContent = '💾 Connect & Save';
-                btn.disabled = false;
+                console.error('Init error:', error);
+                document.getElementById('loadingScreen').innerHTML = `
+                    <h2>❌ Error Loading App</h2>
+                    <p style="margin-top: 12px; color: #ef4444;">${error.message}</p>
+                    <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px;">Retry</button>
+                `;
             }
-        }
-        
-        async function createTable() {
-            // Note: User needs to run this SQL in Supabase dashboard
-            const sql = `
-CREATE TABLE IF NOT EXISTS food_entries (
-    id BIGSERIAL PRIMARY KEY,
-    user_name TEXT NOT NULL,
-    date DATE NOT NULL,
-    food TEXT NOT NULL,
-    protein NUMERIC NOT NULL,
-    carbs NUMERIC NOT NULL,
-    fat NUMERIC NOT NULL,
-    calories NUMERIC NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Enable Row Level Security
-ALTER TABLE food_entries ENABLE ROW LEVEL SECURITY;
-
--- Policy: Anyone can read all entries
-CREATE POLICY "Enable read access for all users" ON food_entries
-FOR SELECT USING (true);
-
--- Policy: Anyone can insert entries
-CREATE POLICY "Enable insert for all users" ON food_entries
-FOR INSERT WITH CHECK (true);
-
--- Policy: Anyone can update entries
-CREATE POLICY "Enable update for all users" ON food_entries
-FOR UPDATE USING (true);
-
--- Policy: Anyone can delete entries
-CREATE POLICY "Enable delete for all users" ON food_entries
-FOR DELETE USING (true);
-`;
-            
-            const instructions = `
-✅ Almost done! Final step:
-
-1. Go to your Supabase dashboard
-2. Click "SQL Editor" in left sidebar
-3. Click "New query"
-4. Copy and paste this SQL:
-
-${sql}
-
-5. Click "Run"
-6. Come back here and refresh the page!
-`;
-            
-            alert(instructions);
-            
-            // Copy SQL to clipboard
-            navigator.clipboard.writeText(sql);
-            
-            document.getElementById('setupSuccess').innerHTML = `
-                <strong>✅ SQL copied to clipboard!</strong><br><br>
-                Run it in Supabase SQL Editor, then refresh this page.
-            `;
-        }
-        
-        function initializeApp() {
-            document.getElementById('setupScreen').classList.add('hidden');
-            document.getElementById('profileSelector').classList.remove('hidden');
         }
         
         function selectProfile(username) {
             currentUser = username;
-            localStorage.setItem('current_user', username);
             document.getElementById('profileSelector').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('currentUserName').textContent = username;
@@ -674,12 +462,12 @@ ${sql}
                 if (error) throw error;
                 
                 entries = data || [];
-                updateSyncStatus(`Synced - ${entries.length} entries`);
+                updateSyncStatus(`☁️ Synced (${entries.length} total)`);
                 updateTodaySummary();
                 
             } catch (error) {
                 console.error('Load error:', error);
-                updateSyncStatus('Sync error');
+                updateSyncStatus('❌ Sync error');
                 showAlert('Error loading data: ' + error.message, 'error');
             }
         }
@@ -712,7 +500,7 @@ ${sql}
         
         async function addEntry(food, protein, carbs, fat, date) {
             try {
-                updateSyncStatus('Saving...');
+                updateSyncStatus('💾 Saving...');
                 
                 const calories = (protein * 4) + (carbs * 4) + (fat * 9);
                 
@@ -736,7 +524,7 @@ ${sql}
                 
             } catch (error) {
                 console.error('Save error:', error);
-                updateSyncStatus('Save failed');
+                updateSyncStatus('❌ Save failed');
                 showAlert('Error saving: ' + error.message, 'error');
             }
         }
@@ -807,7 +595,7 @@ ${sql}
             if (!confirm('Delete this entry?')) return;
             
             try {
-                updateSyncStatus('Deleting...');
+                updateSyncStatus('🗑️ Deleting...');
                 
                 const { error } = await supabase
                     .from('food_entries')
@@ -821,7 +609,7 @@ ${sql}
                 
             } catch (error) {
                 console.error('Delete error:', error);
-                updateSyncStatus('Delete failed');
+                updateSyncStatus('❌ Delete failed');
                 showAlert('Error deleting: ' + error.message, 'error');
             }
         }
@@ -838,12 +626,6 @@ ${sql}
             container.appendChild(alert);
             
             setTimeout(() => alert.remove(), 4000);
-        }
-        
-        function showError(elementId, message) {
-            const el = document.getElementById(elementId);
-            el.textContent = message;
-            el.classList.remove('hidden');
         }
     </script>
 </body>
