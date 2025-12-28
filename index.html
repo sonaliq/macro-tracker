@@ -437,11 +437,37 @@
         <div class="card">
             <h2>⚡ Quick Add</h2>
             <input type="date" id="logDate">
+            
+            <h3 style="font-size: 14px; color: #666; margin: 12px 0 8px 0;">Keto Favorites:</h3>
             <button class="btn-secondary" onclick="quickAdd('2 eggs', 12, 1, 10)">🥚 2 Eggs</button>
             <button class="btn-secondary" onclick="quickAdd('Avocado (half)', 1.5, 6, 11)">🥑 Half Avocado</button>
             <button class="btn-secondary" onclick="quickAdd('Chicken breast 4oz', 35, 0, 4)">🍗 Chicken 4oz</button>
             <button class="btn-secondary" onclick="quickAdd('Bacon (3 strips)', 9, 0, 12)">🥓 Bacon x3</button>
             <button class="btn-secondary" onclick="quickAdd('Salmon 6oz', 40, 0, 18)">🐟 Salmon 6oz</button>
+            
+            <h3 style="font-size: 14px; color: #666; margin: 16px 0 8px 0;">My Custom Foods:</h3>
+            <p style="font-size: 12px; color: #999; margin-bottom: 8px;">
+                💡 Edit index.html to add/remove foods below!
+            </p>
+            <!-- ============================================ -->
+            <!-- ADD YOUR OWN FOODS HERE! Easy instructions:  -->
+            <!-- 1. Copy a line below                          -->
+            <!-- 2. Change the food name, emoji, and macros    -->
+            <!-- 3. Save and upload!                           -->
+            <!-- Format: quickAdd('Name', protein, carbs, fat) -->
+            <!-- Macros are per 100g or per serving            -->
+            <!-- ============================================ -->
+            
+            <button class="btn-secondary" onclick="quickAdd('Banana', 1.3, 27, 0.4)">🍌 Banana</button>
+            <button class="btn-secondary" onclick="quickAdd('Orange', 0.9, 12, 0.1)">🍊 Orange</button>
+            <button class="btn-secondary" onclick="quickAdd('Almond Cookies (2)', 4, 20, 12)">🍪 Almond Cookies</button>
+            <button class="btn-secondary" onclick="quickAdd('Greek Yogurt 1 cup', 17, 9, 5)">🥛 Greek Yogurt</button>
+            <button class="btn-secondary" onclick="quickAdd('Apple', 0.3, 25, 0.3)">🍎 Apple</button>
+            <button class="btn-secondary" onclick="quickAdd('Protein Shake', 25, 5, 3)">🥤 Protein Shake</button>
+            
+            <!-- TEMPLATE: Copy this line and edit it to add more foods:
+            <button class="btn-secondary" onclick="quickAdd('YOUR_FOOD', PROTEIN, CARBS, FAT)">EMOJI Food Name</button>
+            -->
         </div>
 
         <!-- Manual Entry -->
@@ -510,6 +536,67 @@
         let currentUser = null;
         let entries = [];
         let calorieChart = null;
+        
+        // Fallback food database (when USDA rate limit hit)
+        const commonFoods = {
+            // Proteins
+            'chicken breast': { protein: 31, carbs: 0, fat: 3.6 },
+            'chicken thigh': { protein: 26, carbs: 0, fat: 10 },
+            'salmon': { protein: 20, carbs: 0, fat: 13 },
+            'tuna': { protein: 30, carbs: 0, fat: 1 },
+            'ground beef': { protein: 26, carbs: 0, fat: 15 },
+            'steak': { protein: 26, carbs: 0, fat: 17 },
+            'pork chop': { protein: 31, carbs: 0, fat: 13 },
+            'bacon': { protein: 37, carbs: 1.4, fat: 42 },
+            'eggs': { protein: 13, carbs: 1.1, fat: 11 },
+            'egg whites': { protein: 11, carbs: 0.7, fat: 0.2 },
+            'shrimp': { protein: 24, carbs: 0.2, fat: 0.3 },
+            'cod': { protein: 18, carbs: 0, fat: 0.7 },
+            'turkey': { protein: 29, carbs: 0, fat: 7 },
+            
+            // Dairy
+            'cheddar cheese': { protein: 25, carbs: 1.3, fat: 33 },
+            'mozzarella': { protein: 22, carbs: 2.2, fat: 22 },
+            'cream cheese': { protein: 6, carbs: 4, fat: 34 },
+            'butter': { protein: 0.9, carbs: 0.1, fat: 81 },
+            'heavy cream': { protein: 2.1, carbs: 2.8, fat: 37 },
+            'greek yogurt': { protein: 10, carbs: 3.6, fat: 0.4 },
+            'cottage cheese': { protein: 11, carbs: 3.4, fat: 4.3 },
+            
+            // Vegetables
+            'broccoli': { protein: 2.8, carbs: 7, fat: 0.4 },
+            'spinach': { protein: 2.9, carbs: 3.6, fat: 0.4 },
+            'cauliflower': { protein: 1.9, carbs: 5, fat: 0.3 },
+            'lettuce': { protein: 1.4, carbs: 2.9, fat: 0.2 },
+            'cucumber': { protein: 0.7, carbs: 3.6, fat: 0.1 },
+            'bell pepper': { protein: 1, carbs: 6, fat: 0.3 },
+            'zucchini': { protein: 1.2, carbs: 3.1, fat: 0.3 },
+            'mushrooms': { protein: 3.1, carbs: 3.3, fat: 0.3 },
+            'asparagus': { protein: 2.2, carbs: 3.9, fat: 0.1 },
+            'kale': { protein: 4.3, carbs: 9, fat: 0.9 },
+            'avocado': { protein: 2, carbs: 8.5, fat: 15 },
+            'tomato': { protein: 0.9, carbs: 3.9, fat: 0.2 },
+            
+            // Nuts & Seeds
+            'almonds': { protein: 21, carbs: 22, fat: 50 },
+            'walnuts': { protein: 15, carbs: 14, fat: 65 },
+            'pecans': { protein: 9, carbs: 14, fat: 72 },
+            'peanuts': { protein: 26, carbs: 16, fat: 49 },
+            'peanut butter': { protein: 25, carbs: 20, fat: 50 },
+            'almond butter': { protein: 21, carbs: 19, fat: 55 },
+            'chia seeds': { protein: 17, carbs: 42, fat: 31 },
+            'flax seeds': { protein: 18, carbs: 29, fat: 42 },
+            
+            // Oils & Fats
+            'olive oil': { protein: 0, carbs: 0, fat: 100 },
+            'coconut oil': { protein: 0, carbs: 0, fat: 100 },
+            'mct oil': { protein: 0, carbs: 0, fat: 100 },
+            
+            // Other
+            'dark chocolate': { protein: 5, carbs: 46, fat: 43 },
+            'tofu': { protein: 8, carbs: 1.9, fat: 4.8 },
+            'tempeh': { protein: 19, carbs: 9, fat: 11 }
+        };
         
         // Initialize on page load
         window.addEventListener('load', function() {
@@ -766,7 +853,7 @@
         }
         
         async function lookupFood() {
-            const query = document.getElementById('foodSearch').value.trim();
+            const query = document.getElementById('foodSearch').value.trim().toLowerCase();
             
             if (!query) {
                 showAlert('Please enter a food name', 'warning');
@@ -783,76 +870,127 @@
             try {
                 console.log('Searching for:', query);
                 
-                // Use USDA API
+                // First, try USDA API
                 const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=DEMO_KEY&query=${encodeURIComponent(query)}&pageSize=5`;
-                console.log('Fetching:', url);
+                console.log('Trying USDA API...');
                 
                 const response = await fetch(url);
                 console.log('Response status:', response.status);
+                
+                if (response.status === 429) {
+                    // Rate limited - use fallback
+                    console.log('USDA rate limited, using fallback database');
+                    throw new Error('RATE_LIMITED');
+                }
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                console.log('Got data:', data);
+                console.log('Got USDA data');
                 
                 if (!data.foods || data.foods.length === 0) {
-                    resultsDiv.innerHTML = '<div class="alert alert-info">No results found. Try a different search term or use Manual Entry.</div>';
-                    return;
+                    // No USDA results - try fallback
+                    throw new Error('NO_RESULTS');
                 }
                 
-                let html = '<h3 style="margin: 16px 0 12px 0; font-size: 16px;">Tap to select:</h3>';
-                
-                data.foods.slice(0, 5).forEach(food => {
-                    const nutrients = food.foodNutrients || [];
-                    
-                    const proteinNutrient = nutrients.find(n => 
-                        n.nutrientName === 'Protein' || 
-                        n.nutrientId === 1003
-                    );
-                    const carbsNutrient = nutrients.find(n => 
-                        n.nutrientName === 'Carbohydrate, by difference' || 
-                        n.nutrientId === 1005
-                    );
-                    const fatNutrient = nutrients.find(n => 
-                        n.nutrientName === 'Total lipid (fat)' || 
-                        n.nutrientId === 1004
-                    );
-                    
-                    const protein = proteinNutrient ? proteinNutrient.value : 0;
-                    const carbs = carbsNutrient ? carbsNutrient.value : 0;
-                    const fat = fatNutrient ? fatNutrient.value : 0;
-                    
-                    const calories = (protein * 4) + (carbs * 4) + (fat * 9);
-                    
-                    // Escape quotes in food name
-                    const foodName = food.description.replace(/'/g, "\\'").replace(/"/g, '\\"');
-                    
-                    html += `
-                        <div class="food-result" onclick='selectFood("${foodName}", ${protein}, ${carbs}, ${fat})'>
-                            <div class="food-result-name">${food.description}</div>
-                            <div class="food-result-macros">
-                                ${calories.toFixed(0)} cal • 
-                                P: ${protein.toFixed(1)}g • 
-                                C: ${carbs.toFixed(1)}g • 
-                                F: ${fat.toFixed(1)}g
-                                (per 100g)
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                resultsDiv.innerHTML = html;
-                showAlert('Tap a food to select it', 'success');
+                // Display USDA results
+                displayResults(data.foods, 'USDA Database');
                 
             } catch (error) {
-                console.error('USDA lookup error:', error);
-                resultsDiv.innerHTML = `<div class="alert alert-error">⚠️ Error: ${error.message}<br><small>Try Manual Entry instead.</small></div>`;
+                console.error('USDA error:', error);
+                
+                // Use fallback database
+                const matches = searchFallbackDatabase(query);
+                
+                if (matches.length > 0) {
+                    displayResults(matches, 'Common Foods Database');
+                    showAlert('Using local database (USDA rate limited)', 'info');
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            ⚠️ No matches found. Try:<br>
+                            • Different spelling<br>
+                            • Generic name (e.g., "chicken" not "grilled chicken")<br>
+                            • Or use Manual Entry
+                        </div>
+                    `;
+                }
             } finally {
                 lookupBtn.disabled = false;
                 lookupBtn.innerHTML = '🔍 Look Up Macros';
             }
+        }
+        
+        function searchFallbackDatabase(query) {
+            const matches = [];
+            
+            // Search for partial matches
+            for (const [foodName, macros] of Object.entries(commonFoods)) {
+                if (foodName.includes(query) || query.includes(foodName.split(' ')[0])) {
+                    matches.push({
+                        description: foodName.charAt(0).toUpperCase() + foodName.slice(1),
+                        protein: macros.protein,
+                        carbs: macros.carbs,
+                        fat: macros.fat
+                    });
+                }
+            }
+            
+            return matches.slice(0, 5);
+        }
+        
+        function displayResults(foods, source) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            let html = `<h3 style="margin: 16px 0 8px 0; font-size: 14px; color: #666;">From ${source}:</h3>`;
+            
+            foods.slice(0, 5).forEach(food => {
+                let protein, carbs, fat;
+                
+                if (food.foodNutrients) {
+                    // USDA format
+                    const nutrients = food.foodNutrients;
+                    const proteinNutrient = nutrients.find(n => 
+                        n.nutrientName === 'Protein' || n.nutrientId === 1003
+                    );
+                    const carbsNutrient = nutrients.find(n => 
+                        n.nutrientName === 'Carbohydrate, by difference' || n.nutrientId === 1005
+                    );
+                    const fatNutrient = nutrients.find(n => 
+                        n.nutrientName === 'Total lipid (fat)' || n.nutrientId === 1004
+                    );
+                    
+                    protein = proteinNutrient ? proteinNutrient.value : 0;
+                    carbs = carbsNutrient ? carbsNutrient.value : 0;
+                    fat = fatNutrient ? fatNutrient.value : 0;
+                } else {
+                    // Fallback format
+                    protein = food.protein;
+                    carbs = food.carbs;
+                    fat = food.fat;
+                }
+                
+                const calories = (protein * 4) + (carbs * 4) + (fat * 9);
+                const foodName = food.description.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                
+                html += `
+                    <div class="food-result" onclick='selectFood("${foodName}", ${protein}, ${carbs}, ${fat})'>
+                        <div class="food-result-name">${food.description}</div>
+                        <div class="food-result-macros">
+                            ${calories.toFixed(0)} cal • 
+                            P: ${protein.toFixed(1)}g • 
+                            C: ${carbs.toFixed(1)}g • 
+                            F: ${fat.toFixed(1)}g
+                            (per 100g)
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+            showAlert('Tap a food to select it', 'success');
         }
         
         function selectFood(name, protein, carbs, fat) {
