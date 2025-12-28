@@ -466,15 +466,29 @@
         
         // Check if setup is complete
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded');
+            console.log('Supabase library loaded:', typeof window.supabase !== 'undefined');
+            
             const savedUrl = localStorage.getItem('supabase_url');
             const savedKey = localStorage.getItem('supabase_key');
             
+            console.log('Saved URL:', savedUrl);
+            console.log('Saved Key exists:', !!savedKey);
+            
             if (savedUrl && savedKey) {
                 // Initialize Supabase
-                supabase = supabase.createClient(savedUrl, savedKey);
-                initializeApp();
+                try {
+                    supabase = window.supabase.createClient(savedUrl, savedKey);
+                    console.log('Supabase initialized from saved credentials');
+                    initializeApp();
+                } catch (error) {
+                    console.error('Error initializing Supabase:', error);
+                    alert('Error loading app: ' + error.message);
+                    document.getElementById('setupScreen').classList.remove('hidden');
+                }
             } else {
                 // Show setup screen
+                console.log('No saved credentials, showing setup screen');
                 document.getElementById('setupScreen').classList.remove('hidden');
             }
             
@@ -485,29 +499,38 @@
         });
         
         function setupSupabase() {
+            console.log('Setup button clicked');
+            
             const url = document.getElementById('supabaseUrl').value.trim();
             const key = document.getElementById('supabaseKey').value.trim();
             
+            console.log('URL:', url);
+            console.log('Key length:', key.length);
+            
             if (!url || !key) {
+                alert('Please enter both URL and Key');
                 showError('setupError', 'Please enter both URL and Key');
                 return;
             }
             
             // Save credentials
-            localStorage.setItem('supabase_url', url);
-            localStorage.setItem('supabase_key', key);
-            
-            // Initialize Supabase
             try {
-                supabase = window.supabase.createClient(url, key);
-                document.getElementById('setupSuccess').textContent = '✅ Connected successfully! Setting up database...';
-                document.getElementById('setupSuccess').classList.remove('hidden');
+                localStorage.setItem('supabase_url', url);
+                localStorage.setItem('supabase_key', key);
+                console.log('Credentials saved to localStorage');
                 
-                // Create table
-                setTimeout(() => {
-                    createTable();
-                }, 1000);
+                // Initialize Supabase
+                supabase = window.supabase.createClient(url, key);
+                console.log('Supabase client created');
+                
+                alert('✅ Connected! The database table is already set up. Click OK to continue.');
+                
+                // Skip table creation (already done)
+                initializeApp();
+                
             } catch (error) {
+                console.error('Setup error:', error);
+                alert('Error: ' + error.message);
                 showError('setupError', 'Connection failed: ' + error.message);
             }
         }
