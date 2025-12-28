@@ -4,6 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Macro Tracker Pro</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Macro Tracker">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- App Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23667eea'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='280' fill='white'>🥗</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🥗</text></svg>">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="data:application/json,{
+        'name': 'Macro Tracker',
+        'short_name': 'Macros',
+        'description': 'Track your macros with voice input and AI',
+        'start_url': './',
+        'display': 'standalone',
+        'background_color': '%23667eea',
+        'theme_color': '%23667eea',
+        'icons': [
+            {
+                'src': 'data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27><rect width=%27512%27 height=%27512%27 rx=%27100%27 fill=%27%23667eea%27/><text x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 font-size=%27280%27 fill=%27white%27>🥗</text></svg>',
+                'sizes': '512x512',
+                'type': 'image/svg+xml',
+                'purpose': 'any maskable'
+            }
+        ]
+    }">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -389,12 +419,222 @@
         canvas {
             max-height: 300px;
         }
+        
+        .profile-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .profile-selector-content {
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+        
+        .profile-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .profile-card:active {
+            transform: scale(0.95);
+        }
+        
+        .profile-icon {
+            font-size: 64px;
+            margin-bottom: 12px;
+        }
+        
+        .profile-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .switch-user-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+            width: auto;
+            margin: 0;
+        }
+        
+        .switch-user-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .calendar-nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            padding: 8px 4px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .calendar-day.other-month {
+            color: #d1d5db;
+        }
+        
+        .calendar-day.logged {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #10b981;
+        }
+        
+        .calendar-day.missed {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #ef4444;
+        }
+        
+        .calendar-day.future {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+        
+        .calendar-day.today {
+            border-color: #667eea;
+            border-width: 3px;
+            font-weight: 700;
+        }
+        
+        .calendar-day:hover:not(.other-month) {
+            transform: scale(1.1);
+        }
+        
+        .micronutrients {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+        
+        .micronutrient-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .micronutrient-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .micronutrient-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .micronutrient-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
     </style>
 </head>
 <body>
+    <!-- User Profile Selector -->
+    <div id="profileSelector" class="profile-selector">
+        <div class="profile-selector-content">
+            <h1 style="font-size: 32px; margin-bottom: 12px;">🥗 Macro Tracker</h1>
+            <p style="color: #6b7280; margin-bottom: 32px;">Select your profile to continue</p>
+            
+            <div class="profile-cards">
+                <div class="profile-card" onclick="selectProfile('Sonali')">
+                    <div class="profile-icon">👩</div>
+                    <div class="profile-name">Sonali</div>
+                </div>
+                <div class="profile-card" onclick="selectProfile('Raf')">
+                    <div class="profile-icon">👨</div>
+                    <div class="profile-name">Raf</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until profile selected) -->
+    <div id="mainApp" style="display: none;">
+    
     <div class="header">
-        <h1>🥗 Macro Tracker Pro</h1>
-        <p>Voice input + Auto macro lookup from USDA</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>🥗 Macro Tracker</h1>
+                <p>Voice input + Auto macro lookup from USDA</p>
+            </div>
+            <button class="switch-user-btn" onclick="switchUser()">
+                <span id="currentUserName"></span>
+                <br><span style="font-size: 11px; opacity: 0.8;">Switch User</span>
+            </button>
+        </div>
     </div>
 
     <div id="alertContainer"></div>
@@ -464,6 +704,21 @@
     <!-- Stats Tab -->
     <div id="statsTab" class="tab-content">
         <div class="card">
+            <h2>📅 Monthly Calendar</h2>
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" onclick="changeMonth(-1)">◀</button>
+                <h3 id="calendarMonth" style="margin: 0; font-size: 18px;"></h3>
+                <button class="calendar-nav-btn" onclick="changeMonth(1)">▶</button>
+            </div>
+            <div id="calendar" class="calendar-grid"></div>
+            <div style="display: flex; gap: 12px; margin-top: 12px; font-size: 12px; color: #6b7280;">
+                <div><span style="display: inline-block; width: 12px; height: 12px; background: #10b981; border-radius: 3px; margin-right: 4px;"></span>Logged</div>
+                <div><span style="display: inline-block; width: 12px; height: 12px; background: #ef4444; border-radius: 3px; margin-right: 4px;"></span>Missed</div>
+                <div><span style="display: inline-block; width: 12px; height: 12px; background: #e5e7eb; border-radius: 3px; margin-right: 4px;"></span>Future</div>
+            </div>
+        </div>
+        
+        <div class="card">
             <h2>Daily Summary</h2>
             <input type="date" id="statsDate" onchange="loadStats()">
             
@@ -498,23 +753,78 @@
             </div>
         </div>
     </div>
+    
+    </div> <!-- End mainApp -->
 
     <script>
         // Global state
-        let entries = JSON.parse(localStorage.getItem('macro_entries') || '[]');
+        let currentUser = localStorage.getItem('current_user') || null;
+        let entries = [];
         let currentTab = 'logger';
         let currentPeriod = 'daily';
         let macroChart = null;
         let pieChart = null;
         let calorieChart = null;
+        let currentCalendarMonth = new Date();
+        let currentCalendarYear = new Date().getFullYear();
+
+        // Load entries for current user
+        function loadUserData() {
+            if (currentUser) {
+                entries = JSON.parse(localStorage.getItem(`macro_entries_${currentUser}`) || '[]');
+            }
+        }
+        
+        // Save entries for current user
+        function saveUserData() {
+            if (currentUser) {
+                localStorage.setItem(`macro_entries_${currentUser}`, JSON.stringify(entries));
+            }
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already selected
+            if (currentUser) {
+                showMainApp();
+            } else {
+                document.getElementById('profileSelector').style.display = 'flex';
+            }
+        });
+        
+        function selectProfile(username) {
+            currentUser = username;
+            localStorage.setItem('current_user', username);
+            loadUserData();
+            showMainApp();
+        }
+        
+        function showMainApp() {
+            document.getElementById('profileSelector').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('currentUserName').textContent = currentUser;
+            
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('logDate').value = today;
             document.getElementById('statsDate').value = today;
             loadStats();
-        });
+            renderCalendar();
+        }
+        
+        function switchUser() {
+            if (confirm('Switch to a different user?')) {
+                currentUser = null;
+                localStorage.removeItem('current_user');
+                entries = [];
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('profileSelector').style.display = 'flex';
+                
+                // Destroy charts
+                if (macroChart) macroChart.destroy();
+                if (pieChart) pieChart.destroy();
+                if (calorieChart) calorieChart.destroy();
+            }
+        }
 
         function showAlert(message, type = 'info') {
             const container = document.getElementById('alertContainer');
@@ -544,6 +854,7 @@
             if (tab === 'stats') {
                 loadStats();
                 loadCharts();
+                renderCalendar();
             }
         }
 
@@ -629,20 +940,46 @@
                     const carbsNutrient = nutrients.find(n => n.nutrientName === 'Carbohydrate, by difference' || n.nutrientId === 1005);
                     const fatNutrient = nutrients.find(n => n.nutrientName === 'Total lipid (fat)' || n.nutrientId === 1004);
                     
+                    // Extract micronutrients
+                    const fiberNutrient = nutrients.find(n => n.nutrientName === 'Fiber, total dietary' || n.nutrientId === 1079);
+                    const sugarNutrient = nutrients.find(n => n.nutrientName === 'Sugars, total including NLEA' || n.nutrientId === 2000);
+                    const sodiumNutrient = nutrients.find(n => n.nutrientName === 'Sodium, Na' || n.nutrientId === 1093);
+                    const cholesterolNutrient = nutrients.find(n => n.nutrientName === 'Cholesterol' || n.nutrientId === 1253);
+                    const vitaminCNutrient = nutrients.find(n => n.nutrientName === 'Vitamin C, total ascorbic acid' || n.nutrientId === 1162);
+                    const calciumNutrient = nutrients.find(n => n.nutrientName === 'Calcium, Ca' || n.nutrientId === 1087);
+                    const ironNutrient = nutrients.find(n => n.nutrientName === 'Iron, Fe' || n.nutrientId === 1089);
+                    
                     const protein = proteinNutrient ? proteinNutrient.value : 0;
                     const carbs = carbsNutrient ? carbsNutrient.value : 0;
                     const fat = fatNutrient ? fatNutrient.value : 0;
                     
+                    const fiber = fiberNutrient ? fiberNutrient.value : 0;
+                    const sugar = sugarNutrient ? sugarNutrient.value : 0;
+                    const sodium = sodiumNutrient ? sodiumNutrient.value : 0;
+                    const cholesterol = cholesterolNutrient ? cholesterolNutrient.value : 0;
+                    const vitaminC = vitaminCNutrient ? vitaminCNutrient.value : 0;
+                    const calcium = calciumNutrient ? calciumNutrient.value : 0;
+                    const iron = ironNutrient ? ironNutrient.value : 0;
+                    
                     const calories = (protein * 4) + (carbs * 4) + (fat * 9);
                     
+                    // Store micronutrients as JSON string
+                    const micronutrients = {
+                        fiber, sugar, sodium, cholesterol, vitaminC, calcium, iron
+                    };
+                    
+                    const foodNameEscaped = food.description.replace(/'/g, "\\'").replace(/`/g, "\\`");
+                    const micronutrientsStr = JSON.stringify(micronutrients).replace(/"/g, '&quot;');
+                    
                     html += `
-                        <div class="food-result" onclick="selectFood('${food.description.replace(/'/g, "\\'")}', ${protein}, ${carbs}, ${fat})">
+                        <div class="food-result" onclick='selectFood(\`${foodNameEscaped}\`, ${protein}, ${carbs}, ${fat}, ${JSON.stringify(micronutrients)})'>
                             <div class="food-result-name">${food.description}</div>
                             <div class="food-result-macros">
                                 ${calories.toFixed(0)} cal • 
                                 P: ${protein.toFixed(1)}g • 
                                 C: ${carbs.toFixed(1)}g • 
                                 F: ${fat.toFixed(1)}g
+                                ${fiber > 0 ? `• Fiber: ${fiber.toFixed(1)}g` : ''}
                                 (per 100g)
                             </div>
                         </div>
@@ -661,12 +998,17 @@
             }
         }
 
-        function selectFood(name, protein, carbs, fat) {
+        function selectFood(name, protein, carbs, fat, micronutrientsJson) {
             // Pre-fill manual entry with the selected food
             document.getElementById('manualFoodName').value = name;
             document.getElementById('manualProtein').value = protein.toFixed(1);
             document.getElementById('manualCarbs').value = carbs.toFixed(1);
             document.getElementById('manualFat').value = fat.toFixed(1);
+            
+            // Store micronutrients temporarily for when user adds the food
+            if (micronutrientsJson) {
+                window.tempMicronutrients = micronutrientsJson;
+            }
             
             // Scroll to manual entry
             document.getElementById('manualFoodName').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -685,6 +1027,7 @@
             
             if (currentTab === 'stats') {
                 loadStats();
+                renderCalendar();
             }
         }
 
@@ -700,22 +1043,24 @@
                 return;
             }
 
-            addEntry(name, protein, carbs, fat, logDate);
+            addEntry(name, protein, carbs, fat, logDate, window.tempMicronutrients);
             
-            // Clear form
+            // Clear form and temp micronutrients
             document.getElementById('manualFoodName').value = '';
             document.getElementById('manualProtein').value = '';
             document.getElementById('manualCarbs').value = '';
             document.getElementById('manualFat').value = '';
+            window.tempMicronutrients = null;
             
             showAlert(`✅ Added ${name}`, 'success');
             
             if (currentTab === 'stats') {
                 loadStats();
+                renderCalendar();
             }
         }
 
-        function addEntry(food, protein, carbs, fat, date) {
+        function addEntry(food, protein, carbs, fat, date, micronutrients) {
             const calories = (protein * 4) + (carbs * 4) + (fat * 9);
             const entry = {
                 id: Date.now() + Math.random(),
@@ -724,19 +1069,21 @@
                 protein: Number(protein),
                 carbs: Number(carbs),
                 fat: Number(fat),
-                calories: calories
+                calories: calories,
+                micronutrients: micronutrients || {}
             };
             
             entries.push(entry);
-            localStorage.setItem('macro_entries', JSON.stringify(entries));
+            saveUserData();
         }
 
         function deleteEntry(id) {
             if (!confirm('Delete this entry?')) return;
             
             entries = entries.filter(e => e.id !== id);
-            localStorage.setItem('macro_entries', JSON.stringify(entries));
+            saveUserData();
             loadStats();
+            renderCalendar();
             showAlert('Entry deleted', 'success');
         }
 
@@ -823,10 +1170,143 @@
 
             container.innerHTML = html;
             
+            // Add micronutrients summary if available
+            const totalMicros = {
+                fiber: 0,
+                sugar: 0,
+                sodium: 0,
+                cholesterol: 0,
+                vitaminC: 0,
+                calcium: 0,
+                iron: 0
+            };
+            
+            let hasMicronutrients = false;
+            dayEntries.forEach(entry => {
+                if (entry.micronutrients) {
+                    hasMicronutrients = true;
+                    totalMicros.fiber += entry.micronutrients.fiber || 0;
+                    totalMicros.sugar += entry.micronutrients.sugar || 0;
+                    totalMicros.sodium += entry.micronutrients.sodium || 0;
+                    totalMicros.cholesterol += entry.micronutrients.cholesterol || 0;
+                    totalMicros.vitaminC += entry.micronutrients.vitaminC || 0;
+                    totalMicros.calcium += entry.micronutrients.calcium || 0;
+                    totalMicros.iron += entry.micronutrients.iron || 0;
+                }
+            });
+            
+            if (hasMicronutrients) {
+                const microHtml = `
+                    <div class="micronutrients">
+                        <h3 style="margin-bottom: 12px; font-size: 16px; color: #374151;">Other Nutrients</h3>
+                        <div class="micronutrient-grid">
+                            <div class="micronutrient-item">
+                                <div class="micronutrient-label">Fiber</div>
+                                <div class="micronutrient-value">${totalMicros.fiber.toFixed(1)}g</div>
+                            </div>
+                            <div class="micronutrient-item">
+                                <div class="micronutrient-label">Sugar</div>
+                                <div class="micronutrient-value">${totalMicros.sugar.toFixed(1)}g</div>
+                            </div>
+                            <div class="micronutrient-item">
+                                <div class="micronutrient-label">Sodium</div>
+                                <div class="micronutrient-value">${totalMicros.sodium.toFixed(0)}mg</div>
+                            </div>
+                            <div class="micronutrient-item">
+                                <div class="micronutrient-label">Cholesterol</div>
+                                <div class="micronutrient-value">${totalMicros.cholesterol.toFixed(0)}mg</div>
+                            </div>
+                            <div class="micronutrient-item">
+                                <div class="micronutrient-label">Vitamin C</div>
+                                <div class="micronutrient-value">${totalMicros.vitaminC.toFixed(1)}mg</div>
+                            </div>
+                            <div class="micronutrient-item">
+                                <div class="micronutrient-label">Calcium</div>
+                                <div class="micronutrient-value">${totalMicros.calcium.toFixed(0)}mg</div>
+                            </div>
+                            <div class="micronutrient-item">
+                                <div class="micronutrient-label">Iron</div>
+                                <div class="micronutrient-value">${totalMicros.iron.toFixed(1)}mg</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += microHtml;
+            }
+            
             // Update charts if on stats tab
             if (currentTab === 'stats') {
                 updatePieChart();
             }
+        }
+        
+        function renderCalendar() {
+            const year = currentCalendarMonth.getFullYear();
+            const month = currentCalendarMonth.getMonth();
+            
+            // Update header
+            document.getElementById('calendarMonth').textContent = 
+                currentCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+            
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // Get all dates with entries
+            const datesWithEntries = new Set(entries.map(e => e.date));
+            
+            let html = '';
+            
+            // Day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                html += `<div class="calendar-day-header">${day}</div>`;
+            });
+            
+            // Empty cells before month starts
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                html += '<div class="calendar-day other-month"></div>';
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateStr = date.toISOString().split('T')[0];
+                const isFuture = date > today;
+                const isToday = dateStr === todayStr;
+                const hasEntry = datesWithEntries.has(dateStr);
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (isFuture) {
+                    classes += ' future';
+                } else if (hasEntry) {
+                    classes += ' logged';
+                } else {
+                    classes += ' missed';
+                }
+                
+                html += `<div class="${classes}" onclick="selectCalendarDate('${dateStr}')">${day}</div>`;
+            }
+            
+            document.getElementById('calendar').innerHTML = html;
+        }
+        
+        function changeMonth(direction) {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + direction);
+            renderCalendar();
+        }
+        
+        function selectCalendarDate(dateStr) {
+            document.getElementById('statsDate').value = dateStr;
+            loadStats();
+            
+            // Scroll to daily summary
+            document.getElementById('statsDate').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         function changePeriod(period) {
