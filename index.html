@@ -1290,6 +1290,11 @@
         function quickAdd(name, protein, carbs, fat) {
             const logDate = document.getElementById('logDate').value;
             addEntry(name, protein, carbs, fat, logDate);
+            
+            // Force immediate save and reload
+            saveUserData();
+            loadUserData();
+            
             showAlert(`Added ${name}`, 'success');
             
             if (currentTab === 'stats') {
@@ -1311,6 +1316,10 @@
             }
 
             addEntry(name, protein, carbs, fat, logDate, window.tempMicronutrients);
+            
+            // Force immediate save and reload
+            saveUserData();
+            loadUserData();
             
             // Clear form and temp micronutrients
             document.getElementById('manualFoodName').value = '';
@@ -1341,7 +1350,18 @@
             };
             
             entries.push(entry);
+            
+            // CRITICAL: Save immediately, don't wait
             saveUserData();
+            
+            // Double-check it saved
+            const verify = localStorage.getItem(`macro_entries_${currentUser}`);
+            if (!verify) {
+                console.error('CRITICAL: Save failed immediately after add!');
+                alert('⚠️ WARNING: Data did not save! Please screenshot this and contact support.');
+            } else {
+                console.log('✓ Immediate save verified, data in storage');
+            }
         }
 
         function deleteEntry(id) {
